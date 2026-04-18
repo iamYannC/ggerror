@@ -11,8 +11,8 @@ Provides a single geom layer, geom_error(), that wraps ggplot2 error bar geoms w
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/iamyannc/ggerror}
-  \item Report bugs at \url{https://github.com/iamyannc/ggerror/issues}
+  \item \url{https://github.com/iamYannC/ggerror}
+  \item Report bugs at \url{https://github.com/iamYannC/ggerror/issues}
 }
 
 }

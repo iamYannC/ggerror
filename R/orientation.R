@@ -16,11 +16,6 @@
 infer_orientation <- function(data, params = list()) {
   explicit <- params$orientation
   if (!is.null(explicit) && !is.na(explicit)) {
-    if (!explicit %in% c("x", "y")) {
-      cli::cli_abort(
-        "{.arg orientation} must be {.val x} or {.val y}, not {.val {explicit}}."
-      )
-    }
     return(explicit)
   }
 

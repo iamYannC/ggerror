@@ -60,21 +60,33 @@ test_that("geom_error_* wrappers pin their err_type", {
 test_that("geom_error_* wrappers reject a conflicting err_type", {
   expect_error(
     geom_error_linerange(err_type = "crossbar"),
-    regexp = "err_type"
+    class = "ggerror_error_pinned_err_type"
+  )
+  expect_error(
+    geom_error_crossbar(err_type = "linerange"),
+    class = "ggerror_error_pinned_err_type"
+  )
+  expect_error(
+    geom_error_pointrange(err_type = "errorbar"),
+    class = "ggerror_error_pinned_err_type"
   )
 })
 
-test_that("invalid err_type is rejected with a clear error", {
+test_that("invalid err_type is rejected at the call site", {
   expect_error(
-    {
-      p <- ggplot2::ggplot(
-        data.frame(x = 1:3, y = c("a", "b", "c"), e = c(0.1, 0.2, 0.3)),
-        ggplot2::aes(x, y)
-      ) +
-        geom_error(ggplot2::aes(error = e), err_type = "bogus")
-      ggplot2::ggplot_build(p)
-    },
-    regexp = "err_type"
+    geom_error(err_type = "bogus"),
+    class = "ggerror_error_bad_err_type"
+  )
+})
+
+test_that("invalid orientation is rejected at the call site", {
+  expect_error(
+    geom_error(orientation = "diagonal"),
+    class = "ggerror_error_bad_orientation"
+  )
+  expect_error(
+    geom_error(orientation = c("x", "y")),
+    class = "ggerror_error_bad_orientation"
   )
 })
 
@@ -89,6 +101,19 @@ test_that("geom_error errors when 'error' aesthetic is missing", {
       ggplot2::ggplot_build(p)
     },
     regexp = "error"
+  )
+})
+
+test_that("negative error values are rejected with a classed condition", {
+  p <- ggplot2::ggplot(
+    data.frame(x = 1:3, y = c("a", "b", "c"), e = c(0.1, -0.2, 0.3)),
+    ggplot2::aes(x, y)
+  ) +
+    geom_error(ggplot2::aes(error = e))
+
+  expect_error(
+    ggplot2::ggplot_build(p),
+    class = "ggerror_error_negative_error_aes"
   )
 })
 

@@ -43,6 +43,10 @@ geom_error <- function(mapping = NULL, data = NULL,
                        na.rm = FALSE,
                        show.legend = NA,
                        inherit.aes = TRUE) {
+  call <- rlang::caller_env()
+  check_err_type(err_type, call = call)
+  check_orientation(orientation, call = call)
+
   ggplot2::layer(
     geom        = GeomError,
     mapping     = mapping,
@@ -67,36 +71,36 @@ geom_err <- geom_error
 #' @rdname geom_error
 #' @export
 geom_error_linerange <- function(..., err_type) {
-  if (!missing(err_type)) {
-    cli::cli_abort(
-      "{.fn geom_error_linerange} pins {.arg err_type} to {.val linerange}; \\
-       do not pass it."
-    )
-  }
+  check_pinned_err_type(
+    missing(err_type),
+    fn = "geom_error_linerange",
+    type = "linerange",
+    call = rlang::caller_env()
+  )
   geom_error(..., err_type = "linerange")
 }
 
 #' @rdname geom_error
 #' @export
 geom_error_crossbar <- function(..., err_type) {
-  if (!missing(err_type)) {
-    cli::cli_abort(
-      "{.fn geom_error_crossbar} pins {.arg err_type} to {.val crossbar}; \\
-       do not pass it."
-    )
-  }
+  check_pinned_err_type(
+    missing(err_type),
+    fn = "geom_error_crossbar",
+    type = "crossbar",
+    call = rlang::caller_env()
+  )
   geom_error(..., err_type = "crossbar")
 }
 
 #' @rdname geom_error
 #' @export
 geom_error_pointrange <- function(..., err_type) {
-  if (!missing(err_type)) {
-    cli::cli_abort(
-      "{.fn geom_error_pointrange} pins {.arg err_type} to {.val pointrange}; \\
-       do not pass it."
-    )
-  }
+  check_pinned_err_type(
+    missing(err_type),
+    fn = "geom_error_pointrange",
+    type = "pointrange",
+    call = rlang::caller_env()
+  )
   geom_error(..., err_type = "pointrange")
 }
 
@@ -125,20 +129,15 @@ GeomError <- ggplot2::ggproto(
   extra_params = c("na.rm", "err_type", "orientation"),
 
   setup_params = function(data, params) {
-    valid <- c("errorbar", "linerange", "crossbar", "pointrange")
-    err_type <- params$err_type %||% "errorbar"
-    if (!err_type %in% valid) {
-      cli::cli_abort(
-        "{.arg err_type} must be one of {.val {valid}}, not {.val {err_type}}."
-      )
-    }
-    params$err_type    <- err_type
+    params$err_type    <- params$err_type %||% "errorbar"
     params$orientation <- infer_orientation(data, params)
     params$flipped_aes <- params$orientation == "y"
     params
   },
 
   setup_data = function(data, params) {
+    check_error_aes(data$error)
+
     data$flipped_aes <- params$flipped_aes
     data <- ggplot2::flip_data(data, params$flipped_aes)
 
@@ -170,8 +169,7 @@ GeomError <- ggplot2::ggproto(
       errorbar   = ggplot2::GeomErrorbar,
       linerange  = ggplot2::GeomLinerange,
       crossbar   = ggplot2::GeomCrossbar,
-      pointrange = ggplot2::GeomPointrange,
-      cli::cli_abort("Invalid {.arg err_type}: {.val {err_type}}.")
+      pointrange = ggplot2::GeomPointrange
     )
 
     args <- list(
