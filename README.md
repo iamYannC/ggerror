@@ -4,10 +4,8 @@
 
 `ggerror` is a lightweight extension of the **ggplot2 ecosystem** designed to simplify error visualizations. It replaces the manual wiring of `ymin`/`ymax` or `xmin`/`xmax` with a single, intuitive `error` aesthetic.
 
-### Why use `ggerror`?
-* **Intuitive:** Declare a single `error` aesthetic and let the package infer orientation automatically.
-* **Safer:** Built-in validation via `cli` prevents mismatched aesthetics and orientation errors.
-* **Standard:** Adheres strictly to `ggplot2` behaviors, `ggproto` best practices, and orientation inference.
+Beyond being intuitive, it is also safer: it eliminates trial-and-error when defining range boundaries (e.g., "is it xmax or ymax?" "what orientation should i define?") and prevents common mistakes, such as accidentally swapping minimum and maximum values.
+It is also flexible enough that you can pass any aesthetic you'd normally pass to the original geom_* (error) functions.
 
 ### Installation
 ```r
@@ -24,4 +22,14 @@ ggplot(mtcars, aes(mpg, factor(cyl))) +
 
 # Easily switch types using the same mapping
 geom_error(aes(error = drat), err_type = "pointrange")
+
 ```
+
+### Supported geoms
+
+| ggplot2 Base | `geom_error(err_type = ...)` | Specific Wrapper |
+| :--- | :--- | :--- |
+| `geom_errorbar` | `"errorbar"` (default) | `geom_error()` |
+| `geom_linerange` | `"linerange"` | `geom_error_linerange()` |
+| `geom_pointrange` | `"pointrange"` | `geom_error_pointrange()` |
+| `geom_crossbar` | `"crossbar"` | `geom_error_crossbar()` |
