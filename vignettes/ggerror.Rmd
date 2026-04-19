@@ -1,0 +1,156 @@
+---
+title: "Using ggerror"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using ggerror}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 96,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r}
+library(ggplot2)
+library(ggerror)
+```
+
+## Why `ggerror`?
+
+Base `ggplot2` gives you several different error geoms, but using them means
+deciding which geom you need, which axis the error should follow, and how to
+wire the lower and upper bounds correctly.
+`ggerror` collapses that into one layer and one error-focused API.
+
+Everything in this vignette uses `mtcars`, so you can copy the examples
+directly.
+
+## Symmetric errors
+
+```{r}
+p <- ggplot(mtcars, aes(mpg, rownames(mtcars))) +
+  geom_point()
+
+p + geom_error(aes(error = drat))
+```
+
+`geom_error()` infers orientation from the data.
+When one axis is discrete and the other is numeric, the error expands along the
+numeric axis.
+By default it dispatches to `geom_errorbar()`.
+
+## Choosing the dispatch geom
+
+You can pick the base range geom either through `error_geom` or via one of the
+pinned wrapper functions.
+
+```{r}
+p + geom_error(aes(error = drat), error_geom = "crossbar")
+p + geom_error_crossbar(aes(error = drat))
+```
+
+Supported values are `"errorbar"`, `"linerange"`, `"crossbar"`, and
+`"pointrange"`.
+The wrapper functions pin that choice on purpose.
+
+## Functional programming
+
+When you want to generate several variants programmatically, `geom_error()`
+works naturally with a vector of geom names.
+
+```{r, eval = requireNamespace("purrr", quietly = TRUE) && requireNamespace("patchwork", quietly = TRUE)}
+supported <- c("errorbar", "crossbar", "linerange", "pointrange")
+
+plots <- purrr::map(
+  supported,
+  \(geom_name) p + geom_error(aes(error = drat), error_geom = geom_name)
+)
+
+patchwork::wrap_plots(plots, ncol = 2)
+```
+
+The example above is optional.
+If `purrr` and `patchwork` are not installed, the rest of the vignette still
+works without them.
+
+## Asymmetric errors
+
+Use `error_neg` and `error_pos` when the negative and positive extents differ.
+
+```{r}
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_point() +
+  geom_error(aes(error_neg = drat / 2, error_pos = drat))
+```
+
+`error_neg` extends in the negative direction and `error_pos` extends in the
+positive direction, regardless of whether the error is horizontal or vertical.
+Both must be supplied together.
+If you want symmetric behavior, use `error`.
+
+## One-sided bars
+
+Setting one side to `0` gives you a one-sided error bar.
+
+```{r}
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_point() +
+  geom_error(
+    aes(error_neg = 0, error_pos = drat),
+    width_neg = 0
+  )
+```
+
+On its own, `aes(error_neg = 0, error_pos = drat)` still draws a cap at the
+observation value at the default width, because the negative side has zero
+length but inherits the shared cap width.
+Setting `width_neg = 0` removes that cap and gives you a genuine one-sided
+bar: in the split `errorbar` path, `ggerror` draws only the outer caps, so
+the cap at the shared bound is suppressed.
+
+## Advanced: per-side styling
+
+For finer control, the negative and positive halves can be styled separately
+with fixed `_neg` and `_pos` parameters for `colour`, `fill`, `linewidth`,
+`linetype`, `alpha`, and `width`.
+
+```{r}
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_point() +
+  geom_error(
+    aes(error_neg = drat / 2, error_pos = drat),
+    colour_neg = "steelblue",
+    colour_pos = "firebrick",
+    linewidth_neg = 0.3,
+    linewidth_pos = 1
+  )
+```
+
+```{r}
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_error(
+    aes(error_neg = drat / 2, error_pos = drat),
+    error_geom = "crossbar",
+    fill_neg = "grey90",
+    fill_pos = "grey60",
+    width_neg = 0.2,
+    width_pos = 0.8
+  )
+```
+
+These per-side values are fixed parameters, not mapped aesthetics.
+In other words, use `colour_neg = "steelblue"`, not
+`aes(colour_neg = some_column)`.
+
+For `geom_error_pointrange()`, the shared point keeps the base point
+aesthetics while the line halves can still differ.
+`shape`, `size`, and `stroke` are not split because there is still only one
+central point per observation.

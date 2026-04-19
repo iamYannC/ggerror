@@ -2,44 +2,36 @@
 
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-0509-3609)
 
-`ggerror` is a lightweight wrapper around **ggplot2**'s error geoms. It replaces the manual wiring of `ymin`/`ymax` or `xmin`/`xmax` with a single, intuitive `error` aesthetic.
+`ggerror` is a lightweight wrapper around **ggplot2**'s error geoms.
+It replaces manual `ymin` / `ymax` or `xmin` / `xmax` wiring with one
+`error` aesthetic, automatic orientation inference, and a single dispatch
+point for the core range geoms.
 
 ### Motivation
-Beyond being intuitive, it is also safer: it eliminates trial-and-error when defining range boundaries (e.g., *"is it xmax or ymax?"*, *"Is it x or y orientation?"*) and prevents common mistakes, such as swapping minimum and maximum values.
-It is also flexible enough that you can pass any aesthetic you'd normally pass to the original geom_* (error) functions.
+It reduces the easy-to-make mistakes in error-bar code: swapping bounds,
+choosing the wrong orientation, or reaching for the wrong geom variant.
+It also keeps the familiar `ggplot2` styling surface, including asymmetric
+errors and fixed per-side styling.
 
 ### Installation
 ```r
-# Install from GitHub
 pak::pak('iamyannc/ggerror')
 
 library(ggplot2)
 library(ggerror)
 
 p <- ggplot(mtcars, aes(mpg, rownames(mtcars))) +
-     geom_point()
-# Orientation is inferred automatically, defaults to `errorbar`
- p + geom_error(aes(error = drat))
+  geom_point()
 
-# Either use the general `geom_error` and specify `error_geom`,
- # Or the explicit geom_error_*
-p + geom_error(aes(error = drat), error_geom = "crossbar")
-p + geom_error_crossbar(aes(error = drat))
-# They are the same.
-
-# You can also pass error to `ggplot()`
-ggplot(mtcars, aes(mpg, rownames(mtcars), error = drat)) +
-  geom_point() + geom_error_linerange()
-
-
-# Having a general geom allows for easy functional programming approach:
-supported_geoms <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
-purrr::map(supported_geoms, \(err) p + geom_error(aes(error = drat), error_geom = err))
-
+p + geom_error(aes(error = drat))
 ```
+
+For a full tour of symmetric, asymmetric, one-sided, and per-side styling
+patterns, see `vignette("ggerror")`.
+
 <a href="man/figures/examples.png">
-    <img src="man/figures/examples.png" alt="..." width="100%" />
-  </a>
+  <img src="man/figures/examples.png" alt="ggerror example geoms" width="100%" />
+</a>
 
 ### Supported geoms
 
@@ -51,7 +43,7 @@ purrr::map(supported_geoms, \(err) p + geom_error(aes(error = drat), error_geom 
 | `geom_crossbar` | `"crossbar"` | `geom_error_crossbar()` |
 
 ### Disclaimer
-This small wrapper-package was developed with the assistance of AI tools, primarily Claude Code. All code has been reviewed by the author, who remains fully responsible for its quality.
-Ideas for new geoms are welcome. Open an issue for any bug report or feature request.
-Thank you for reading and for using this package.
-*Yann*
+This package was developed with the assistance of AI tools.
+All code has been reviewed by the author, who remains responsible for its
+quality.
+Ideas for new geoms are welcome.
