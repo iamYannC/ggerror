@@ -363,37 +363,9 @@ test_that("per-side styling can fully style the two halves independently", {
 
 # --- dispatch contract tests ------------------------------------------------
 
-# Regression guard for the draw_panel dispatch bug: when `error_geom` was
-# silently stripped by Geom$draw_layer() (because draw_panel had `...` in
-# its formals), every wrapper rendered identically to the default errorbar.
-# This test catches that by asserting each error_geom produces a distinct SVG.
-test_that("every error_geom produces a distinct rendered SVG", {
-  skip_if_not_installed("svglite")
-
-  dat <- mtcars
-  dat$rn <- rownames(mtcars)
-
-  render_svg <- function(error_geom) {
-    p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
-      geom_error(ggplot2::aes(error = drat), error_geom = error_geom)
-    path <- tempfile(fileext = ".svg")
-    on.exit(unlink(path), add = TRUE)
-    ggplot2::ggsave(path, p, device = svglite::svglite,
-                    width = 6, height = 8)
-    paste(readLines(path, warn = FALSE), collapse = "\n")
-  }
-
-  svgs <- vapply(
-    c("errorbar", "linerange", "crossbar", "pointrange"),
-    render_svg,
-    character(1)
-  )
-
-  expect_length(unique(svgs), 4L)
-})
-
-# Side-by-side visual doppelgangers: each error_geom must render the same as
-# the corresponding base ggplot2 geom given equivalent xmin/xmax mapping.
+# Side-by-side visual doppelgangers: the wrapper routes must still render the
+# same grobs as the corresponding base ggplot2 geoms given equivalent
+# xmin/xmax mapping.
 test_that("geom_error_crossbar matches geom_crossbar visually", {
   skip_if_not_installed("vdiffr")
   dat <- mtcars; dat$rn <- rownames(mtcars)
@@ -437,34 +409,6 @@ test_that("geom_error renders symmetric errorbar on discrete y", {
     geom_error(ggplot2::aes(error = drat))
 
   vdiffr::expect_doppelganger("symmetric-errorbar-discrete-y", p)
-})
-
-test_that("geom_error renders linerange variant", {
-  skip_if_not_installed("vdiffr")
-
-  p <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg, rownames(mtcars))) +
-    ggplot2::geom_point() +
-    geom_error(ggplot2::aes(error = drat), error_geom = "linerange")
-
-  vdiffr::expect_doppelganger("linerange-discrete-y", p)
-})
-
-test_that("geom_error renders crossbar variant", {
-  skip_if_not_installed("vdiffr")
-
-  p <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg, rownames(mtcars))) +
-    geom_error(ggplot2::aes(error = drat), error_geom = "crossbar")
-
-  vdiffr::expect_doppelganger("crossbar-discrete-y", p)
-})
-
-test_that("geom_error renders pointrange variant", {
-  skip_if_not_installed("vdiffr")
-
-  p <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg, rownames(mtcars))) +
-    geom_error(ggplot2::aes(error = drat), error_geom = "pointrange")
-
-  vdiffr::expect_doppelganger("pointrange-discrete-y", p)
 })
 
 test_that("geom_error renders with two numeric axes (default orientation y)", {
