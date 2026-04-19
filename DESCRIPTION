@@ -1,5 +1,5 @@
 Package: ggerror
-Title: Ergonomic Error Bars and Range Indicators for ggplot2
+Title: A lightweight wrapper around ggplot2's error geoms. designed for simplicity & flexibility.
 Version: 0.1.0
 Authors@R: 
     person("Yann", "Cohen", , "yannco5@gmail.com", role = c("aut", "cre"),
