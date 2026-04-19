@@ -4,7 +4,7 @@
 \name{ggerror-package}
 \alias{ggerror}
 \alias{ggerror-package}
-\title{ggerror: Ergonomic Error Bars and Range Indicators for ggplot2}
+\title{ggerror: A lightweight wrapper around ggplot2's error geoms. designed for simplicity & flexibility.}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 

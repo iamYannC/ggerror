@@ -20,8 +20,7 @@ Imports:
 Suggests:
     svglite,
     testthat (>= 3.0.0),
-    vdiffr (>= 1.0.0),
-    withr
+    vdiffr (>= 1.0.0)
 Config/testthat/edition: 3
 URL: https://github.com/iamYannC/ggerror
 BugReports: https://github.com/iamYannC/ggerror/issues

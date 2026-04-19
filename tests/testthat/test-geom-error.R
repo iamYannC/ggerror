@@ -130,7 +130,8 @@ test_that("every error_geom produces a distinct rendered SVG", {
   render_svg <- function(error_geom) {
     p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
       geom_error(ggplot2::aes(error = drat), error_geom = error_geom)
-    path <- withr::local_tempfile(fileext = ".svg")
+    path <- tempfile(fileext = ".svg")
+    on.exit(unlink(path), add = TRUE)
     ggplot2::ggsave(path, p, device = svglite::svglite,
                     width = 6, height = 8)
     paste(readLines(path, warn = FALSE), collapse = "\n")
