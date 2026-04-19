@@ -6,6 +6,8 @@
 \alias{ggerror-package}
 \title{ggerror: Ergonomic Error Bars and Range Indicators for ggplot2}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Provides a single geom layer, geom_error(), that wraps ggplot2 error bar geoms with automatic orientation inference. Users declare an error aesthetic and the package computes the min/max bounds and dispatches to geom_errorbar(), geom_linerange(), geom_crossbar(), or geom_pointrange().
 }
 \seealso{
