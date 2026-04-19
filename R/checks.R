@@ -57,26 +57,114 @@ check_pinned_error_geom <- function(is_missing, fn, type,
 
 #' @keywords internal
 #' @noRd
-check_error_aes <- function(error) {
-  if (!is.numeric(error)) {
+per_side_param_names <- c(
+  "colour_neg", "colour_pos",
+  "fill_neg", "fill_pos",
+  "linewidth_neg", "linewidth_pos",
+  "linetype_neg", "linetype_pos",
+  "alpha_neg", "alpha_pos",
+  "width_neg", "width_pos"
+)
+
+#' @keywords internal
+#' @noRd
+check_per_side_params <- function(params, call = rlang::caller_env()) {
+  for (nm in intersect(names(params), per_side_param_names)) {
+    value <- params[[nm]]
+
+    if (is.null(value)) {
+      next
+    }
+
+    if (!rlang::is_scalar_atomic(value)) {
+      cli::cli_abort(
+        c(
+          "{.arg {nm}} must be a single fixed value, not a vectorised aesthetic.",
+          i = "Map aesthetics inside {.fn aes}, or pass one scalar value here."
+        ),
+        class = "ggerror_error_bad_per_side_param",
+        call = call
+      )
+    }
+
+    if (nm %in% c("width_neg", "width_pos") &&
+        (!is.numeric(value) || is.na(value) || value < 0)) {
+      cli::cli_abort(
+        "{.arg {nm}} must be a single non-negative numeric value.",
+        class = "ggerror_error_bad_per_side_param",
+        call = call
+      )
+    }
+  }
+
+  invisible(params)
+}
+
+#' @keywords internal
+#' @noRd
+check_error_aes_combination <- function(data) {
+  has_sym  <- "error"     %in% names(data)
+  has_neg  <- "error_neg" %in% names(data)
+  has_pos  <- "error_pos" %in% names(data)
+
+  if (has_sym && (has_neg || has_pos)) {
     cli::cli_abort(
-      "{.field error} aesthetic must be numeric, \\
-       not {.cls {class(error)[1]}}.",
-      class = "ggerror_error_bad_error_aes"
+      c(
+        "Cannot combine {.field error} with \\
+         {.field error_neg} / {.field error_pos}.",
+        i = "Use {.field error} for symmetric errors,",
+        i = "or {.field error_neg} + {.field error_pos} for asymmetric errors."
+      ),
+      class = "ggerror_error_conflicting_error_aes"
     )
   }
 
-  neg <- !is.na(error) & error < 0
+  if (has_neg != has_pos) {
+    provided <- if (has_pos) "error_pos" else "error_neg"
+    missing_ <- if (has_pos) "error_neg" else "error_pos"
+    cli::cli_abort(
+      c(
+        "{.field {provided}} was supplied without {.field {missing_}}.",
+        i = "For symmetric errors, use {.field error} instead.",
+        i = "For a one-sided bar, set {.field {missing_}} to {.val {0}} explicitly."
+      ),
+      class = "ggerror_error_incomplete_asym_error_aes"
+    )
+  }
+
+  invisible(data)
+}
+
+#' @keywords internal
+#' @noRd
+check_nonneg_aes <- function(values, aes_name) {
+  if (!is.numeric(values)) {
+    cli::cli_abort(
+      "{.field {aes_name}} aesthetic must be numeric, \\
+       not {.cls {class(values)[1]}}.",
+      class = "ggerror_error_bad_error_aes"
+    )
+  }
+  neg <- !is.na(values) & values < 0
   if (any(neg)) {
     cli::cli_abort(
       c(
-        "{.field error} aesthetic must be non-negative.",
-        i = "Found {sum(neg)} negative value{?s}.",
-        i = "For asymmetric ranges, use {.arg error_lower} / {.arg error_upper} \\
-             (planned for v0.2)."
+        "{.field {aes_name}} aesthetic must be non-negative.",
+        i = "Found {sum(neg)} negative value{?s}."
       ),
       class = "ggerror_error_negative_error_aes"
     )
   }
-  invisible(error)
+  invisible(values)
+}
+
+#' @keywords internal
+#' @noRd
+check_error_aes <- function(data) {
+  for (nm in c("error", "error_neg", "error_pos")) {
+    if (nm %in% names(data)) {
+      check_nonneg_aes(data[[nm]], nm)
+    }
+  }
+  invisible(data)
 }

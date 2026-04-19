@@ -4,11 +4,11 @@
 \name{ggerror-package}
 \alias{ggerror}
 \alias{ggerror-package}
-\title{ggerror: A lightweight wrapper around ggplot2's error geoms. designed for simplicity & flexibility.}
+\title{ggerror: Modified Error Geoms for 'ggplot2'}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Provides a single geom layer, geom_error(), that wraps ggplot2 error bar geoms with automatic orientation inference. Users declare an error aesthetic and the package computes the min/max bounds and dispatches to geom_errorbar(), geom_linerange(), geom_crossbar(), or geom_pointrange().
+Unifies the 'ggplot2' error geoms behind a single layer, geom_error(), that accepts an 'error' aesthetic, infers orientation from the data, computes min/max bounds, and dispatches to geom_errorbar(), geom_linerange(), geom_crossbar(), or geom_pointrange(). Adds support for asymmetric errors via 'error_neg' and 'error_pos' aesthetics, including one-sided error bars.
 }
 \seealso{
 Useful links:

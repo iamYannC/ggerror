@@ -41,6 +41,24 @@ test_that("geom_error drops the custom 'error' column before drawing", {
 })
 
 
+render_geom_error_svg <- function(plot) {
+  skip_if_not_installed("svglite")
+
+  path <- tempfile(fileext = ".svg")
+  on.exit(unlink(path), add = TRUE)
+
+  ggplot2::ggsave(
+    filename = path,
+    plot = plot,
+    device = svglite::svglite,
+    width = 6,
+    height = 4
+  )
+
+  paste(readLines(path, warn = FALSE), collapse = "\n")
+}
+
+
 
 test_that("geom_error_* wrappers pin their error_geom", {
   dat <- data.frame(x = 1:3, y = c("a", "b", "c"), e = c(0.1, 0.2, 0.3))
@@ -88,6 +106,17 @@ test_that("invalid orientation is rejected at the call site", {
   )
 })
 
+test_that("per-side params are fixed scalar values, not vectorised aesthetics", {
+  expect_error(
+    geom_error(colour_neg = c("red", "blue")),
+    class = "ggerror_error_bad_per_side_param"
+  )
+  expect_error(
+    geom_error(width_pos = c(0.2, 0.4)),
+    class = "ggerror_error_bad_per_side_param"
+  )
+})
+
 test_that("geom_error errors when 'error' aesthetic is missing", {
   expect_error(
     {
@@ -113,6 +142,207 @@ test_that("negative error values are rejected with a classed condition", {
     ggplot2::ggplot_build(p),
     class = "ggerror_error_negative_error_aes"
   )
+})
+
+# --- asymmetric errors (error_neg / error_pos) ------------------------------
+
+test_that("asymmetric error computes ymin/ymax on discrete x", {
+  p <- ggplot2::ggplot(
+    data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
+               lo = c(0.1, 0.2, 0.3), hi = c(0.4, 0.5, 0.6)),
+    ggplot2::aes(x, y)
+  ) +
+    geom_error(ggplot2::aes(error_neg = lo, error_pos = hi))
+
+  built <- ggplot2::ggplot_build(p)
+  ld <- built$data[[1]]
+
+  expect_true(all(c("ymin", "ymax") %in% names(ld)))
+  expect_identical(ld$ymin, ld$y - c(0.1, 0.2, 0.3))
+  expect_identical(ld$ymax, ld$y + c(0.4, 0.5, 0.6))
+  expect_false("error_neg" %in% names(ld))
+  expect_false("error_pos" %in% names(ld))
+})
+
+test_that("asymmetric error computes xmin/xmax on discrete y", {
+  p <- ggplot2::ggplot(
+    data.frame(x = c(1, 2, 3), y = c("a", "b", "c"),
+               lo = c(0.1, 0.2, 0.3), hi = c(0.4, 0.5, 0.6)),
+    ggplot2::aes(x, y)
+  ) +
+    geom_error(ggplot2::aes(error_neg = lo, error_pos = hi))
+
+  built <- ggplot2::ggplot_build(p)
+  ld <- built$data[[1]]
+
+  expect_true(all(c("xmin", "xmax") %in% names(ld)))
+  expect_identical(ld$xmin, ld$x - c(0.1, 0.2, 0.3))
+  expect_identical(ld$xmax, ld$x + c(0.4, 0.5, 0.6))
+})
+
+test_that("one-sided bar (error_neg = 0) renders only the positive side", {
+  p <- ggplot2::ggplot(
+    data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
+               hi = c(0.4, 0.5, 0.6)),
+    ggplot2::aes(x, y)
+  ) +
+    geom_error(ggplot2::aes(error_neg = 0, error_pos = hi))
+
+  built <- ggplot2::ggplot_build(p)
+  ld <- built$data[[1]]
+
+  expect_identical(ld$ymin, ld$y)
+  expect_identical(ld$ymax, ld$y + c(0.4, 0.5, 0.6))
+})
+
+test_that("combining error with error_pos raises a classed condition", {
+  p <- ggplot2::ggplot(
+    data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
+               e = c(0.1, 0.2, 0.3), hi = c(0.4, 0.5, 0.6)),
+    ggplot2::aes(x, y)
+  ) +
+    geom_error(ggplot2::aes(error = e, error_pos = hi))
+
+  expect_error(
+    ggplot2::ggplot_build(p),
+    class = "ggerror_error_conflicting_error_aes"
+  )
+})
+
+test_that("only one of error_neg / error_pos raises a classed condition", {
+  dat <- data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
+                    hi = c(0.4, 0.5, 0.6))
+
+  p_pos_only <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+    geom_error(ggplot2::aes(error_pos = hi))
+  expect_error(
+    ggplot2::ggplot_build(p_pos_only),
+    class = "ggerror_error_incomplete_asym_error_aes"
+  )
+
+  p_neg_only <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+    geom_error(ggplot2::aes(error_neg = hi))
+  expect_error(
+    ggplot2::ggplot_build(p_neg_only),
+    class = "ggerror_error_incomplete_asym_error_aes"
+  )
+})
+
+test_that("negative values in error_neg / error_pos are rejected", {
+  dat <- data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
+                    bad = c(0.1, -0.2, 0.3),
+                    good = c(0.1, 0.2, 0.3))
+
+  p_neg <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+    geom_error(ggplot2::aes(error_neg = bad, error_pos = good))
+  expect_error(
+    ggplot2::ggplot_build(p_neg),
+    class = "ggerror_error_negative_error_aes"
+  )
+
+  p_pos <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+    geom_error(ggplot2::aes(error_neg = good, error_pos = bad))
+  expect_error(
+    ggplot2::ggplot_build(p_pos),
+    class = "ggerror_error_negative_error_aes"
+  )
+})
+
+test_that("geom_error_asymmetric matches geom_errorbar visually", {
+  skip_if_not_installed("vdiffr")
+  dat <- mtcars; dat$rn <- rownames(mtcars)
+  p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    geom_error(ggplot2::aes(error_neg = drat / 2, error_pos = drat))
+  ref <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(xmin = mpg - drat / 2, xmax = mpg + drat)
+    )
+  vdiffr::expect_doppelganger("match-asymmetric-ours", p)
+  vdiffr::expect_doppelganger("match-asymmetric-ref",  ref)
+})
+
+test_that("per-side colours render as distinct negative and positive halves", {
+  dat <- mtcars
+  dat$rn <- rownames(mtcars)
+
+  p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    geom_error(
+      ggplot2::aes(error_neg = drat / 2, error_pos = drat),
+      colour_neg = "red",
+      colour_pos = "blue"
+    )
+
+  svg <- render_geom_error_svg(p)
+
+  expect_match(svg, "stroke: #FF0000|stroke='red'|stroke: red")
+  expect_match(svg, "stroke: #0000FF|stroke='blue'|stroke: blue")
+})
+
+test_that("per-side width suppresses the shared-bound cap on horizontal bars", {
+  skip_if_not_installed("vdiffr")
+
+  dat <- mtcars
+  dat$rn <- rownames(mtcars)
+
+  p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    ggplot2::geom_point() +
+    geom_error(
+      ggplot2::aes(error_neg = 0, error_pos = drat),
+      width_neg = 0
+    )
+
+  vdiffr::expect_doppelganger("one-sided-width-neg-horizontal", p)
+})
+
+test_that("per-side width suppresses the shared-bound cap on vertical bars", {
+  skip_if_not_installed("vdiffr")
+
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
+    ggplot2::geom_point() +
+    geom_error(
+      ggplot2::aes(error_neg = 0, error_pos = drat),
+      width_neg = 0
+    )
+
+  vdiffr::expect_doppelganger("one-sided-width-neg-vertical", p)
+})
+
+test_that("per-side widths can differ between negative and positive halves", {
+  skip_if_not_installed("vdiffr")
+
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
+    ggplot2::geom_point() +
+    geom_error(
+      ggplot2::aes(error_neg = drat / 2, error_pos = drat),
+      width_neg = 0.2,
+      width_pos = 0.8
+    )
+
+  vdiffr::expect_doppelganger("asymmetric-cap-widths", p)
+})
+
+test_that("per-side styling can fully style the two halves independently", {
+  skip_if_not_installed("vdiffr")
+
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
+    geom_error(
+      ggplot2::aes(error_neg = drat / 2, error_pos = drat),
+      error_geom = "crossbar",
+      colour_neg = "steelblue",
+      colour_pos = "firebrick",
+      fill_neg = "grey90",
+      fill_pos = "grey60",
+      linewidth_neg = 0.3,
+      linewidth_pos = 1.1,
+      linetype_neg = 2,
+      linetype_pos = 1,
+      alpha_neg = 0.4,
+      alpha_pos = 0.8,
+      width_neg = 0.2,
+      width_pos = 0.8
+    )
+
+  vdiffr::expect_doppelganger("fully-styled-per-side-crossbar", p)
 })
 
 # --- dispatch contract tests ------------------------------------------------

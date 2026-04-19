@@ -3,7 +3,8 @@
 #' A thin wrapper around [ggplot2::geom_errorbar()],
 #' [ggplot2::geom_linerange()], [ggplot2::geom_crossbar()], and
 #' [ggplot2::geom_pointrange()] that accepts a single `error` aesthetic
-#' and figures out orientation from the data.
+#' and figures out orientation from the data. For asymmetric errors, use
+#' `error_neg` + `error_pos` instead of `error`.
 #'
 #' @param mapping Set of aesthetic mappings created by [ggplot2::aes()].
 #' @param data The data to be displayed in this layer.
@@ -21,8 +22,20 @@
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #'
 #' @section Aesthetics:
-#' `geom_error()` requires `x`, `y`, and `error`. The `error` value is a
-#' symmetric half-width applied along the non-categorical axis.
+#' `geom_error()` requires `x`, `y`, and one of:
+#' - `error` — symmetric half-width applied along the non-categorical axis.
+#' - `error_neg` **and** `error_pos` — asymmetric; the bar extends
+#'   `error_neg` in the negative direction and `error_pos` in the positive
+#'   direction along the non-categorical axis. For a one-sided bar, set
+#'   the unused side to `0` explicitly.
+#'
+#' Mixing `error` with `error_neg` / `error_pos` is an error, as is
+#' providing only one of the asymmetric pair.
+#'
+#' Fixed per-side styling can be supplied through `...` with `_neg` and
+#' `_pos` suffixes for `colour`, `fill`, `linewidth`, `linetype`, `alpha`,
+#' and `width`.
+#' These are fixed scalar parameters, not mapped aesthetics.
 #'
 #' @examples
 #' library(ggplot2)
@@ -35,6 +48,20 @@
 #'   geom_point() +
 #'   geom_error(aes(error = drat), error_geom = "pointrange")
 #'
+#' # Asymmetric: bar extends drat/2 below and drat above each point
+#' ggplot(mtcars, aes(factor(cyl), mpg)) +
+#'   geom_point() +
+#'   geom_error(aes(error_neg = drat / 2, error_pos = drat))
+#'
+#' # Style the negative and positive halves separately
+#' ggplot(mtcars, aes(factor(cyl), mpg)) +
+#'   geom_point() +
+#'   geom_error(
+#'     aes(error_neg = drat / 2, error_pos = drat),
+#'     colour_neg = "steelblue",
+#'     colour_pos = "firebrick"
+#'   )
+#'
 #' @export
 geom_error <- function(mapping = NULL, data = NULL,
                        stat = "identity", position = "identity",
@@ -45,8 +72,10 @@ geom_error <- function(mapping = NULL, data = NULL,
                        show.legend = NA,
                        inherit.aes = TRUE) {
   call <- rlang::caller_env()
+  params <- list(...)
   check_error_geom(error_geom, call = call)
   check_orientation(orientation, call = call)
+  check_per_side_params(params, call = call)
 
   ggplot2::layer(
     geom        = GeomError,
@@ -56,16 +85,15 @@ geom_error <- function(mapping = NULL, data = NULL,
     position    = position,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
-    params      = list(
+    params      = c(list(
       error_geom  = error_geom,
       orientation = orientation,
-      na.rm       = na.rm,
-      ...
-    )
+      na.rm       = na.rm
+    ), params)
   )
 }
 
- 
+
 #' @rdname geom_error
 #' @export
 geom_error_linerange <- function(..., error_geom) {
@@ -110,7 +138,7 @@ geom_error_pointrange <- function(..., error_geom) {
 GeomError <- ggplot2::ggproto(
   "GeomError", ggplot2::Geom,
 
-  required_aes = c("x", "y", "error"),
+  required_aes = c("x", "y", "error|error_pos|error_neg"),
 
   default_aes = ggplot2::aes(
     colour    = "black",
@@ -126,7 +154,10 @@ GeomError <- ggplot2::ggproto(
 
   draw_key = ggplot2::draw_key_path,
 
-  extra_params = c("na.rm", "error_geom", "orientation"),
+  extra_params = c(
+    "na.rm", "error_geom", "orientation",
+    per_side_param_names
+  ),
 
   setup_params = function(data, params) {
     params$error_geom  <- params$error_geom %||% "errorbar"
@@ -136,15 +167,23 @@ GeomError <- ggplot2::ggproto(
   },
 
   setup_data = function(data, params) {
-    check_error_aes(data$error)
+    check_error_aes_combination(data)
+    check_error_aes(data)
 
     data$flipped_aes <- params$flipped_aes
     data <- ggplot2::flip_data(data, params$flipped_aes)
 
     # Error range along canonical y-axis
-    data$ymin <- data$y - data$error
-    data$ymax <- data$y + data$error
-    data$error <- NULL
+    if ("error" %in% names(data)) {
+      data$ymin <- data$y - data$error
+      data$ymax <- data$y + data$error
+      data$error <- NULL
+    } else {
+      data$ymin <- data$y - data$error_neg
+      data$ymax <- data$y + data$error_pos
+      data$error_neg <- NULL
+      data$error_pos <- NULL
+    }
 
     # Cap/box horizontal bounds from width
     width <- data$width %||% params$width %||%
@@ -163,34 +202,332 @@ GeomError <- ggplot2::ggproto(
                         lineend     = "butt",
                         linejoin    = "mitre",
                         fatten      = NULL,
-                        na.rm       = FALSE) {
-    base <- list(
-      data         = data,
-      panel_params = panel_params,
-      coord        = coord,
-      flipped_aes  = flipped_aes,
-      lineend      = lineend
+                        na.rm       = FALSE,
+                        colour_neg = NULL, colour_pos = NULL,
+                        fill_neg = NULL, fill_pos = NULL,
+                        linewidth_neg = NULL, linewidth_pos = NULL,
+                        linetype_neg = NULL, linetype_pos = NULL,
+                        alpha_neg = NULL, alpha_pos = NULL,
+                        width_neg = NULL, width_pos = NULL) {
+    overrides <- list(
+      colour_neg = colour_neg, colour_pos = colour_pos,
+      fill_neg = fill_neg, fill_pos = fill_pos,
+      linewidth_neg = linewidth_neg, linewidth_pos = linewidth_pos,
+      linetype_neg = linetype_neg, linetype_pos = linetype_pos,
+      alpha_neg = alpha_neg, alpha_pos = alpha_pos,
+      width_neg = width_neg, width_pos = width_pos
     )
 
-    grob <- switch(
-      error_geom,
-      errorbar = do.call(
-        ggplot2::GeomErrorbar$draw_panel,
-        base
-      ),
-      linerange = do.call(
-        ggplot2::GeomLinerange$draw_panel,
-        c(base, list(na.rm = na.rm))
-      ),
-      crossbar = do.call(
-        ggplot2::GeomCrossbar$draw_panel,
-        c(base, list(linejoin = linejoin, fatten = fatten %||% 2.5))
-      ),
-      pointrange = do.call(
-        ggplot2::GeomPointrange$draw_panel,
-        c(base, list(fatten = fatten %||% 4, na.rm = na.rm))
-      )
+    has_per_side <- any(!vapply(overrides, is.null, logical(1)))
+
+    if (!has_per_side) {
+      return(dispatch_error_geom(
+        error_geom = error_geom,
+        data = data,
+        panel_params = panel_params,
+        coord = coord,
+        flipped_aes = flipped_aes,
+        lineend = lineend,
+        linejoin = linejoin,
+        fatten = fatten,
+        na.rm = na.rm
+      ))
+    }
+
+    draw_per_side(
+      data = data,
+      overrides = overrides,
+      error_geom = error_geom,
+      flipped_aes = flipped_aes,
+      panel_params = panel_params,
+      coord = coord,
+      lineend = lineend,
+      linejoin = linejoin,
+      fatten = fatten,
+      na.rm = na.rm
     )
-    grob
   }
 )
+
+#' @keywords internal
+#' @noRd
+dispatch_error_geom <- function(error_geom, data, panel_params, coord,
+                                flipped_aes, lineend, linejoin, fatten,
+                                na.rm) {
+  base <- list(
+    data = data,
+    panel_params = panel_params,
+    coord = coord,
+    flipped_aes = flipped_aes,
+    lineend = lineend
+  )
+
+  switch(
+    error_geom,
+    errorbar = do.call(
+      ggplot2::GeomErrorbar$draw_panel,
+      base
+    ),
+    linerange = do.call(
+      ggplot2::GeomLinerange$draw_panel,
+      c(base, list(na.rm = na.rm))
+    ),
+    crossbar = do.call(
+      ggplot2::GeomCrossbar$draw_panel,
+      c(base, list(linejoin = linejoin, fatten = fatten %||% 2.5))
+    ),
+    pointrange = do.call(
+      ggplot2::GeomPointrange$draw_panel,
+      c(base, list(fatten = fatten %||% 4, na.rm = na.rm))
+    )
+  )
+}
+
+#' @keywords internal
+#' @noRd
+draw_per_side <- function(data, overrides, error_geom, flipped_aes,
+                          panel_params, coord, lineend, linejoin,
+                          fatten, na.rm) {
+  data <- ggplot2::flip_data(data, flipped_aes)
+
+  if (error_geom == "errorbar") {
+    return(draw_per_side_errorbar(
+      data = data,
+      overrides = overrides,
+      flipped_aes = flipped_aes,
+      panel_params = panel_params,
+      coord = coord,
+      lineend = lineend,
+      linejoin = linejoin,
+      na.rm = na.rm
+    ))
+  }
+
+  if (error_geom == "pointrange") {
+    return(draw_per_side_pointrange(
+      data = data,
+      overrides = overrides,
+      flipped_aes = flipped_aes,
+      panel_params = panel_params,
+      coord = coord,
+      lineend = lineend,
+      linejoin = linejoin,
+      fatten = fatten,
+      na.rm = na.rm
+    ))
+  }
+
+  neg <- ggplot2::flip_data(
+    build_per_side_data(data, overrides, "neg"),
+    flipped_aes
+  )
+  pos <- ggplot2::flip_data(
+    build_per_side_data(data, overrides, "pos"),
+    flipped_aes
+  )
+
+  grid::grobTree(
+    dispatch_error_geom(
+      error_geom = error_geom,
+      data = neg,
+      panel_params = panel_params,
+      coord = coord,
+      flipped_aes = flipped_aes,
+      lineend = lineend,
+      linejoin = linejoin,
+      fatten = fatten,
+      na.rm = na.rm
+    ),
+    dispatch_error_geom(
+      error_geom = error_geom,
+      data = pos,
+      panel_params = panel_params,
+      coord = coord,
+      flipped_aes = flipped_aes,
+      lineend = lineend,
+      linejoin = linejoin,
+      fatten = fatten,
+      na.rm = na.rm
+    )
+  )
+}
+
+#' @keywords internal
+#' @noRd
+build_per_side_data <- function(data, overrides, side) {
+  half <- data
+
+  if (identical(side, "neg")) {
+    half$ymax <- half$y
+  } else {
+    half$ymin <- half$y
+  }
+
+  for (aes_name in c("colour", "fill", "linewidth", "linetype", "alpha")) {
+    value <- overrides[[paste0(aes_name, "_", side)]]
+    if (!is.null(value)) {
+      half[[aes_name]] <- value
+    }
+  }
+
+  width <- overrides[[paste0("width_", side)]]
+  if (!is.null(width)) {
+    half$xmin <- half$x - width / 2
+    half$xmax <- half$x + width / 2
+  }
+
+  half
+}
+
+#' @keywords internal
+#' @noRd
+draw_per_side_errorbar <- function(data, overrides, flipped_aes,
+                                   panel_params, coord, lineend,
+                                   linejoin, na.rm) {
+  neg <- ggplot2::flip_data(
+    build_errorbar_segments(data, overrides, "neg"),
+    flipped_aes
+  )
+  pos <- ggplot2::flip_data(
+    build_errorbar_segments(data, overrides, "pos"),
+    flipped_aes
+  )
+
+  grid::grobTree(
+    draw_segment_panel(
+      neg,
+      panel_params = panel_params,
+      coord = coord,
+      lineend = lineend,
+      linejoin = linejoin,
+      na.rm = na.rm
+    ),
+    draw_segment_panel(
+      pos,
+      panel_params = panel_params,
+      coord = coord,
+      lineend = lineend,
+      linejoin = linejoin,
+      na.rm = na.rm
+    )
+  )
+}
+
+#' @keywords internal
+#' @noRd
+build_errorbar_segments <- function(data, overrides, side) {
+  styled <- build_per_side_data(data, overrides, side)
+  width <- resolve_per_side_width(data, overrides, side)
+
+  stem <- styled
+  stem$xend <- styled$x
+  if (identical(side, "neg")) {
+    stem$y <- styled$ymin
+    stem$yend <- styled$y
+  } else {
+    stem$y <- styled$y
+    stem$yend <- styled$ymax
+  }
+
+  cap <- styled
+  cap$x <- styled$x - width / 2
+  cap$xend <- styled$x + width / 2
+  if (identical(side, "neg")) {
+    cap$y <- styled$ymin
+    cap$yend <- styled$ymin
+  } else {
+    cap$y <- styled$ymax
+    cap$yend <- styled$ymax
+  }
+
+  combine_non_zero_segments(stem, cap)
+}
+
+#' @keywords internal
+#' @noRd
+resolve_per_side_width <- function(data, overrides, side) {
+  width <- overrides[[paste0("width_", side)]]
+  if (is.null(width)) {
+    data$xmax - data$xmin
+  } else {
+    rep(width, nrow(data))
+  }
+}
+
+#' @keywords internal
+#' @noRd
+combine_non_zero_segments <- function(...) {
+  segments <- Filter(length, list(...))
+  if (!length(segments)) {
+    return(data.frame())
+  }
+
+  data <- do.call(rbind, segments)
+  data[!(data$x == data$xend & data$y == data$yend), , drop = FALSE]
+}
+
+#' @keywords internal
+#' @noRd
+draw_segment_panel <- function(data, panel_params, coord, lineend,
+                               linejoin, na.rm) {
+  if (!nrow(data)) {
+    return(grid::nullGrob())
+  }
+
+  ggplot2::GeomSegment$draw_panel(
+    data = data,
+    panel_params = panel_params,
+    coord = coord,
+    lineend = lineend,
+    linejoin = linejoin,
+    na.rm = na.rm
+  )
+}
+
+#' @keywords internal
+#' @noRd
+draw_per_side_pointrange <- function(data, overrides, flipped_aes,
+                                     panel_params, coord, lineend,
+                                     linejoin, fatten, na.rm) {
+  neg <- ggplot2::flip_data(
+    build_per_side_data(data, overrides, "neg"),
+    flipped_aes
+  )
+  pos <- ggplot2::flip_data(
+    build_per_side_data(data, overrides, "pos"),
+    flipped_aes
+  )
+  point <- ggplot2::flip_data(data, flipped_aes)
+  point$size <- point$size * (fatten %||% 4)
+
+  grid::grobTree(
+    dispatch_error_geom(
+      error_geom = "linerange",
+      data = neg,
+      panel_params = panel_params,
+      coord = coord,
+      flipped_aes = flipped_aes,
+      lineend = lineend,
+      linejoin = linejoin,
+      fatten = fatten,
+      na.rm = na.rm
+    ),
+    dispatch_error_geom(
+      error_geom = "linerange",
+      data = pos,
+      panel_params = panel_params,
+      coord = coord,
+      flipped_aes = flipped_aes,
+      lineend = lineend,
+      linejoin = linejoin,
+      fatten = fatten,
+      na.rm = na.rm
+    ),
+    ggplot2::GeomPoint$draw_panel(
+      data = point,
+      panel_params = panel_params,
+      coord = coord,
+      na.rm = na.rm
+    )
+  )
+}

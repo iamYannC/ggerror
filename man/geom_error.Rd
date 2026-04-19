@@ -57,12 +57,27 @@ to \code{"identity"}.}
 A thin wrapper around \code{\link[ggplot2:geom_linerange]{ggplot2::geom_errorbar()}},
 \code{\link[ggplot2:geom_linerange]{ggplot2::geom_linerange()}}, \code{\link[ggplot2:geom_linerange]{ggplot2::geom_crossbar()}}, and
 \code{\link[ggplot2:geom_linerange]{ggplot2::geom_pointrange()}} that accepts a single \code{error} aesthetic
-and figures out orientation from the data.
+and figures out orientation from the data. For asymmetric errors, use
+\code{error_neg} + \code{error_pos} instead of \code{error}.
 }
 \section{Aesthetics}{
 
-\code{geom_error()} requires \code{x}, \code{y}, and \code{error}. The \code{error} value is a
-symmetric half-width applied along the non-categorical axis.
+\code{geom_error()} requires \code{x}, \code{y}, and one of:
+\itemize{
+\item \code{error} — symmetric half-width applied along the non-categorical axis.
+\item \code{error_neg} \strong{and} \code{error_pos} — asymmetric; the bar extends
+\code{error_neg} in the negative direction and \code{error_pos} in the positive
+direction along the non-categorical axis. For a one-sided bar, set
+the unused side to \code{0} explicitly.
+}
+
+Mixing \code{error} with \code{error_neg} / \code{error_pos} is an error, as is
+providing only one of the asymmetric pair.
+
+Fixed per-side styling can be supplied through \code{...} with \verb{_neg} and
+\verb{_pos} suffixes for \code{colour}, \code{fill}, \code{linewidth}, \code{linetype}, \code{alpha},
+and \code{width}.
+These are fixed scalar parameters, not mapped aesthetics.
 }
 
 \examples{
@@ -75,6 +90,20 @@ ggplot(mtcars, aes(mpg, rownames(mtcars))) +
 ggplot(mtcars, aes(factor(cyl), mpg)) +
   geom_point() +
   geom_error(aes(error = drat), error_geom = "pointrange")
+
+# Asymmetric: bar extends drat/2 below and drat above each point
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_point() +
+  geom_error(aes(error_neg = drat / 2, error_pos = drat))
+
+# Style the negative and positive halves separately
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_point() +
+  geom_error(
+    aes(error_neg = drat / 2, error_pos = drat),
+    colour_neg = "steelblue",
+    colour_pos = "firebrick"
+  )
 
 }
 \keyword{datasets}
