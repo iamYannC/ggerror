@@ -37,6 +37,9 @@ supported_geoms <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
 purrr::map(supported_geoms, \(err) p + geom_error(aes(error = drat), error_geom = err))
 
 ```
+<a href="man/figures/examples.png">
+    <img src="man/figures/examples.png" alt="..." width="100%" />
+  </a>
 
 ### Supported geoms
 
