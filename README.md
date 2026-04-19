@@ -16,16 +16,25 @@ pak::pak('iamyannc/ggerror')
 library(ggplot2)
 library(ggerror)
 
-p <- ggplot(mtcars, aes(mpg, factor(cyl))) +
+p <- ggplot(mtcars, aes(mpg, rownames(mtcars))) +
      geom_point()
-# Orientation is inferred automatically (e.g., discrete y-axis)
+# Orientation is inferred automatically, defaults to `errorbar`
  p + geom_error(aes(error = drat))
 
-# Easily switch types using the same mapping
-p+ geom_error(aes(error = drat), err_type = "pointrange")
+# Either use the general `geom_error` and specify `err_type`,
+ # Or the explicit geom_error_*
+p + geom_error(aes(error = drat),err_type = "crossbar")
+p + geom_error_crossbar(aes(error = drat))
+# They are the same.
 
-# Or use the designated high-level geom
-p + geom_error_linerange(aes(error = drat))
+# You can also pass error to `ggplot()`
+ggplot(mtcars, aes(mpg, rownames(mtcars), error = drat)) +
+  geom_point() + geom_error_linerange()
+
+
+# Having a general geom allows for easy functional programming approach:
+supported_types <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
+purrr::map(supported_types, \(err) p + geom_error(aes(error = drat), err_type = err))
 
 ```
 
@@ -37,3 +46,9 @@ p + geom_error_linerange(aes(error = drat))
 | `geom_linerange` | `"linerange"` | `geom_error_linerange()` |
 | `geom_pointrange` | `"pointrange"` | `geom_error_pointrange()` |
 | `geom_crossbar` | `"crossbar"` | `geom_error_crossbar()` |
+
+### Disclaimer
+This small wrapper-package was developed with the assistance of AI tools, primarily Claude Code. All code has been reviewed by the author, who remains fully responsible for its quality.
+Ideas for new geoms are welcome. Open an issue for any bug report or feature request.
+Thank you for reading and for using this package.
+*Yann*
