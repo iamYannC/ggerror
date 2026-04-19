@@ -108,6 +108,16 @@ geom_error_pointrange <- function(..., err_type) {
 #' @format NULL
 #' @usage NULL
 #' @export
+base_geom_for <- function(err_type) {
+  switch(
+    err_type,
+    errorbar   = ggplot2::GeomErrorbar,
+    linerange  = ggplot2::GeomLinerange,
+    crossbar   = ggplot2::GeomCrossbar,
+    pointrange = ggplot2::GeomPointrange
+  )
+}
+
 GeomError <- ggplot2::ggproto(
   "GeomError", ggplot2::Geom,
 
@@ -119,7 +129,8 @@ GeomError <- ggplot2::ggproto(
     linewidth = 0.5,
     linetype  = 1,
     shape     = 19,
-    size      = 1.5,
+    size      = 0.5,
+    stroke    = 1,
     alpha     = NA,
     width     = 0.5
   ),
