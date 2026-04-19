@@ -162,29 +162,35 @@ GeomError <- ggplot2::ggproto(
                         flipped_aes = TRUE,
                         lineend     = "butt",
                         linejoin    = "mitre",
-                        na.rm       = FALSE,
-                        ...) {
-    geom <- switch(
-      err_type,
-      errorbar   = ggplot2::GeomErrorbar,
-      linerange  = ggplot2::GeomLinerange,
-      crossbar   = ggplot2::GeomCrossbar,
-      pointrange = ggplot2::GeomPointrange
-    )
-
-    args <- list(
+                        fatten      = NULL,
+                        na.rm       = FALSE) {
+    base <- list(
       data         = data,
       panel_params = panel_params,
       coord        = coord,
-      flipped_aes  = flipped_aes
+      flipped_aes  = flipped_aes,
+      lineend      = lineend
     )
-    if (err_type %in% c("errorbar", "linerange", "crossbar")) {
-      args$lineend <- lineend
-    }
-    if (err_type == "crossbar") {
-      args$linejoin <- linejoin
-    }
 
-    do.call(geom$draw_panel, args)
+    grob <- switch(
+      err_type,
+      errorbar = do.call(
+        ggplot2::GeomErrorbar$draw_panel,
+        base
+      ),
+      linerange = do.call(
+        ggplot2::GeomLinerange$draw_panel,
+        c(base, list(na.rm = na.rm))
+      ),
+      crossbar = do.call(
+        ggplot2::GeomCrossbar$draw_panel,
+        c(base, list(linejoin = linejoin, fatten = fatten %||% 2.5))
+      ),
+      pointrange = do.call(
+        ggplot2::GeomPointrange$draw_panel,
+        c(base, list(fatten = fatten %||% 4, na.rm = na.rm))
+      )
+    )
+    grob
   }
 )

@@ -117,6 +117,71 @@ test_that("negative error values are rejected with a classed condition", {
   )
 })
 
+# --- dispatch contract tests ------------------------------------------------
+
+# Regression guard for the draw_panel dispatch bug: when `err_type` was
+# silently stripped by Geom$draw_layer() (because draw_panel had `...` in
+# its formals), every wrapper rendered identically to the default errorbar.
+# This test catches that by asserting each err_type produces a distinct SVG.
+test_that("every err_type produces a distinct rendered SVG", {
+  skip_if_not_installed("svglite")
+
+  dat <- mtcars
+  dat$rn <- rownames(mtcars)
+
+  render_svg <- function(err_type) {
+    p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+      geom_error(ggplot2::aes(error = drat), err_type = err_type)
+    path <- withr::local_tempfile(fileext = ".svg")
+    ggplot2::ggsave(path, p, device = svglite::svglite,
+                    width = 6, height = 8)
+    paste(readLines(path, warn = FALSE), collapse = "\n")
+  }
+
+  svgs <- vapply(
+    c("errorbar", "linerange", "crossbar", "pointrange"),
+    render_svg,
+    character(1)
+  )
+
+  expect_length(unique(svgs), 4L)
+})
+
+# Side-by-side visual doppelgangers: each err_type must render the same as
+# the corresponding base ggplot2 geom given equivalent xmin/xmax mapping.
+test_that("geom_error_crossbar matches geom_crossbar visually", {
+  skip_if_not_installed("vdiffr")
+  dat <- mtcars; dat$rn <- rownames(mtcars)
+  p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    geom_error_crossbar(ggplot2::aes(error = drat))
+  ref <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    ggplot2::geom_crossbar(ggplot2::aes(xmin = mpg - drat, xmax = mpg + drat))
+  vdiffr::expect_doppelganger("match-crossbar-ours", p)
+  vdiffr::expect_doppelganger("match-crossbar-ref",  ref)
+})
+
+test_that("geom_error_linerange matches geom_linerange visually", {
+  skip_if_not_installed("vdiffr")
+  dat <- mtcars; dat$rn <- rownames(mtcars)
+  p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    geom_error_linerange(ggplot2::aes(error = drat))
+  ref <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    ggplot2::geom_linerange(ggplot2::aes(xmin = mpg - drat, xmax = mpg + drat))
+  vdiffr::expect_doppelganger("match-linerange-ours", p)
+  vdiffr::expect_doppelganger("match-linerange-ref",  ref)
+})
+
+test_that("geom_error_pointrange matches geom_pointrange visually", {
+  skip_if_not_installed("vdiffr")
+  dat <- mtcars; dat$rn <- rownames(mtcars)
+  p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    geom_error_pointrange(ggplot2::aes(error = drat))
+  ref <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    ggplot2::geom_pointrange(ggplot2::aes(xmin = mpg - drat, xmax = mpg + drat))
+  vdiffr::expect_doppelganger("match-pointrange-ours", p)
+  vdiffr::expect_doppelganger("match-pointrange-ref",  ref)
+})
+
 # --- vdiffr snapshot tests --------------------------------------------------
 
 test_that("geom_error renders symmetric errorbar on discrete y", {
