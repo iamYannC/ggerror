@@ -185,8 +185,10 @@ GeomError <- ggplot2::ggproto(
       data$error_pos <- NULL
     }
 
-    # Cap/box horizontal bounds from width
-    width <- data$width %||% params$width %||%
+    # Cap/box horizontal bounds from width. `params[["width"]]` uses exact
+    # matching so per-side params like `width_neg` don't leak via `$` partial
+    # matching.
+    width <- data$width %||% params[["width"]] %||%
       (ggplot2::resolution(data$x, FALSE) * 0.9)
     data$width <- NULL
     data$xmin <- data$x - width / 2

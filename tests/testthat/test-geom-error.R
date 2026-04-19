@@ -307,6 +307,22 @@ test_that("per-side width suppresses the shared-bound cap on vertical bars", {
   vdiffr::expect_doppelganger("one-sided-width-neg-vertical", p)
 })
 
+test_that("width_neg does not leak to the positive side via partial matching", {
+  # Regression: R's `$` does partial name matching on lists, so in setup_data
+  # `params$width` used to silently resolve to `params$width_neg` and collapse
+  # xmin/xmax to x for every row. Only `width_neg` is set here; xmax - xmin
+  # must still be the default full width on the positive side.
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
+    geom_error(
+      ggplot2::aes(error_neg = 0, error_pos = drat),
+      width_neg = 0
+    )
+
+  built <- ggplot2::ggplot_build(p)
+  layer <- built$data[[1]]
+  expect_true(all(layer$xmax - layer$xmin > 0))
+})
+
 test_that("per-side widths can differ between negative and positive halves", {
   skip_if_not_installed("vdiffr")
 
