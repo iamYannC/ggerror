@@ -2,10 +2,10 @@
 
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-0509-3609)
 
-`ggerror` is a lightweight extension of the **ggplot2 ecosystem** designed to simplify error visualizations. It replaces the manual wiring of `ymin`/`ymax` or `xmin`/`xmax` with a single, intuitive `error` aesthetic.
+`ggerror` is a lightweight wrapper around **ggplot2**'s error geoms. It replaces the manual wiring of `ymin`/`ymax` or `xmin`/`xmax` with a single, intuitive `error` aesthetic.
 
 ### Motivation
-Beyond being intuitive, it is also safer: it eliminates trial-and-error when defining range boundaries (e.g., "is it xmax or ymax?" "Is it x or y orientation?") and prevents common mistakes, such as swapping minimum and maximum values.
+Beyond being intuitive, it is also safer: it eliminates trial-and-error when defining range boundaries (e.g., *"is it xmax or ymax?"*, *"Is it x or y orientation?"*) and prevents common mistakes, such as swapping minimum and maximum values.
 It is also flexible enough that you can pass any aesthetic you'd normally pass to the original geom_* (error) functions.
 
 ### Installation
@@ -21,9 +21,9 @@ p <- ggplot(mtcars, aes(mpg, rownames(mtcars))) +
 # Orientation is inferred automatically, defaults to `errorbar`
  p + geom_error(aes(error = drat))
 
-# Either use the general `geom_error` and specify `err_type`,
+# Either use the general `geom_error` and specify `error_geom`,
  # Or the explicit geom_error_*
-p + geom_error(aes(error = drat),err_type = "crossbar")
+p + geom_error(aes(error = drat), error_geom = "crossbar")
 p + geom_error_crossbar(aes(error = drat))
 # They are the same.
 
@@ -33,14 +33,14 @@ ggplot(mtcars, aes(mpg, rownames(mtcars), error = drat)) +
 
 
 # Having a general geom allows for easy functional programming approach:
-supported_types <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
-purrr::map(supported_types, \(err) p + geom_error(aes(error = drat), err_type = err))
+supported_geoms <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
+purrr::map(supported_geoms, \(err) p + geom_error(aes(error = drat), error_geom = err))
 
 ```
 
 ### Supported geoms
 
-| ggplot2 Base | `geom_error(err_type = ...)` | Specific Wrapper |
+| ggplot2 Base | `geom_error(error_geom = ...)` | Specific Wrapper |
 | :--- | :--- | :--- |
 | `geom_errorbar` | `"errorbar"` (default) | `geom_error()` |
 | `geom_linerange` | `"linerange"` | `geom_error_linerange()` |

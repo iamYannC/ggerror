@@ -11,8 +11,9 @@
 #'   to `"identity"`.
 #' @param position Position adjustment.
 #' @param ... Other arguments passed on to [ggplot2::layer()].
-#' @param err_type One of `"errorbar"` (default), `"linerange"`,
-#'   `"crossbar"`, or `"pointrange"`.
+#' @param error_geom One of `"errorbar"` (default), `"linerange"`,
+#'   `"crossbar"`, or `"pointrange"`. Chooses which ggplot2 range geom
+#'   `geom_error()` dispatches to under the hood.
 #' @param orientation Either `NA` (the default; inferred from the data),
 #'   `"x"` (vertical error), or `"y"` (horizontal error).
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -32,19 +33,19 @@
 #'
 #' ggplot(mtcars, aes(factor(cyl), mpg)) +
 #'   geom_point() +
-#'   geom_error(aes(error = drat), err_type = "pointrange")
+#'   geom_error(aes(error = drat), error_geom = "pointrange")
 #'
 #' @export
 geom_error <- function(mapping = NULL, data = NULL,
                        stat = "identity", position = "identity",
                        ...,
-                       err_type = "errorbar",
+                       error_geom = "errorbar",
                        orientation = NA,
                        na.rm = FALSE,
                        show.legend = NA,
                        inherit.aes = TRUE) {
   call <- rlang::caller_env()
-  check_err_type(err_type, call = call)
+  check_error_geom(error_geom, call = call)
   check_orientation(orientation, call = call)
 
   ggplot2::layer(
@@ -56,7 +57,7 @@ geom_error <- function(mapping = NULL, data = NULL,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
     params      = list(
-      err_type    = err_type,
+      error_geom  = error_geom,
       orientation = orientation,
       na.rm       = na.rm,
       ...
@@ -64,60 +65,48 @@ geom_error <- function(mapping = NULL, data = NULL,
   )
 }
 
+ 
 #' @rdname geom_error
 #' @export
-geom_err <- geom_error
-
-#' @rdname geom_error
-#' @export
-geom_error_linerange <- function(..., err_type) {
-  check_pinned_err_type(
-    missing(err_type),
+geom_error_linerange <- function(..., error_geom) {
+  check_pinned_error_geom(
+    missing(error_geom),
     fn = "geom_error_linerange",
     type = "linerange",
     call = rlang::caller_env()
   )
-  geom_error(..., err_type = "linerange")
+  geom_error(..., error_geom = "linerange")
 }
 
 #' @rdname geom_error
 #' @export
-geom_error_crossbar <- function(..., err_type) {
-  check_pinned_err_type(
-    missing(err_type),
+geom_error_crossbar <- function(..., error_geom) {
+  check_pinned_error_geom(
+    missing(error_geom),
     fn = "geom_error_crossbar",
     type = "crossbar",
     call = rlang::caller_env()
   )
-  geom_error(..., err_type = "crossbar")
+  geom_error(..., error_geom = "crossbar")
 }
 
 #' @rdname geom_error
 #' @export
-geom_error_pointrange <- function(..., err_type) {
-  check_pinned_err_type(
-    missing(err_type),
+geom_error_pointrange <- function(..., error_geom) {
+  check_pinned_error_geom(
+    missing(error_geom),
     fn = "geom_error_pointrange",
     type = "pointrange",
     call = rlang::caller_env()
   )
-  geom_error(..., err_type = "pointrange")
+  geom_error(..., error_geom = "pointrange")
 }
+
 
 #' @rdname geom_error
 #' @format NULL
 #' @usage NULL
 #' @export
-base_geom_for <- function(err_type) {
-  switch(
-    err_type,
-    errorbar   = ggplot2::GeomErrorbar,
-    linerange  = ggplot2::GeomLinerange,
-    crossbar   = ggplot2::GeomCrossbar,
-    pointrange = ggplot2::GeomPointrange
-  )
-}
-
 GeomError <- ggplot2::ggproto(
   "GeomError", ggplot2::Geom,
 
@@ -137,10 +126,10 @@ GeomError <- ggplot2::ggproto(
 
   draw_key = ggplot2::draw_key_path,
 
-  extra_params = c("na.rm", "err_type", "orientation"),
+  extra_params = c("na.rm", "error_geom", "orientation"),
 
   setup_params = function(data, params) {
-    params$err_type    <- params$err_type %||% "errorbar"
+    params$error_geom  <- params$error_geom %||% "errorbar"
     params$orientation <- infer_orientation(data, params)
     params$flipped_aes <- params$orientation == "y"
     params
@@ -168,7 +157,7 @@ GeomError <- ggplot2::ggproto(
   },
 
   draw_panel = function(self, data, panel_params, coord,
-                        err_type    = "errorbar",
+                        error_geom  = "errorbar",
                         orientation = "y",
                         flipped_aes = TRUE,
                         lineend     = "butt",
@@ -184,7 +173,7 @@ GeomError <- ggplot2::ggproto(
     )
 
     grob <- switch(
-      err_type,
+      error_geom,
       errorbar = do.call(
         ggplot2::GeomErrorbar$draw_panel,
         base

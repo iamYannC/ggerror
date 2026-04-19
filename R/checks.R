@@ -1,17 +1,17 @@
 #' @keywords internal
 #' @noRd
-check_err_type <- function(err_type, call = rlang::caller_env()) {
+check_error_geom <- function(error_geom, call = rlang::caller_env()) {
   valid <- c("errorbar", "linerange", "crossbar", "pointrange")
-  if (!is.character(err_type) || length(err_type) != 1L ||
-      !err_type %in% valid) {
+  if (!is.character(error_geom) || length(error_geom) != 1L ||
+      !error_geom %in% valid) {
     cli::cli_abort(
-      "{.arg err_type} must be one of {.or {.val {valid}}}, \\
-       not {.val {err_type}}.",
-      class = "ggerror_error_bad_err_type",
+      "{.arg error_geom} must be one of {.or {.val {valid}}}, \\
+       not {.val {error_geom}}.",
+      class = "ggerror_error_bad_error_geom",
       call  = call
     )
   }
-  invisible(err_type)
+  invisible(error_geom)
 }
 
 #' @keywords internal
@@ -40,17 +40,17 @@ check_orientation <- function(orientation, call = rlang::caller_env()) {
 
 #' @keywords internal
 #' @noRd
-check_pinned_err_type <- function(is_missing, fn, type,
-                                  call = rlang::caller_env()) {
+check_pinned_error_geom <- function(is_missing, fn, type,
+                                    call = rlang::caller_env()) {
   if (is_missing) {
     return(invisible(NULL))
   }
   cli::cli_abort(
     c(
-      "{.fn {fn}} pins {.arg err_type} to {.val {type}}; do not pass it.",
-      i = "Use {.fn geom_error} if you need to choose {.arg err_type} at call time."
+      "{.fn {fn}} pins {.arg error_geom} to {.val {type}}; do not pass it.",
+      i = "Use {.fn geom_error} if you need to choose {.arg error_geom} at call time."
     ),
-    class = "ggerror_error_pinned_err_type",
+    class = "ggerror_error_pinned_error_geom",
     call  = call
   )
 }

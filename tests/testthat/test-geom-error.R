@@ -40,11 +40,9 @@ test_that("geom_error drops the custom 'error' column before drawing", {
   expect_false("error" %in% names(ld))
 })
 
-test_that("geom_err is an alias of geom_error", {
-  expect_identical(geom_err, geom_error)
-})
 
-test_that("geom_error_* wrappers pin their err_type", {
+
+test_that("geom_error_* wrappers pin their error_geom", {
   dat <- data.frame(x = 1:3, y = c("a", "b", "c"), e = c(0.1, 0.2, 0.3))
 
   for (type in c("linerange", "crossbar", "pointrange")) {
@@ -53,29 +51,29 @@ test_that("geom_error_* wrappers pin their err_type", {
       wrapper(ggplot2::aes(error = e))
 
     layer <- p$layers[[1]]
-    expect_identical(layer$geom_params$err_type, type)
+    expect_identical(layer$geom_params$error_geom, type)
   }
 })
 
-test_that("geom_error_* wrappers reject a conflicting err_type", {
+test_that("geom_error_* wrappers reject a conflicting error_geom", {
   expect_error(
-    geom_error_linerange(err_type = "crossbar"),
-    class = "ggerror_error_pinned_err_type"
+    geom_error_linerange(error_geom = "crossbar"),
+    class = "ggerror_error_pinned_error_geom"
   )
   expect_error(
-    geom_error_crossbar(err_type = "linerange"),
-    class = "ggerror_error_pinned_err_type"
+    geom_error_crossbar(error_geom = "linerange"),
+    class = "ggerror_error_pinned_error_geom"
   )
   expect_error(
-    geom_error_pointrange(err_type = "errorbar"),
-    class = "ggerror_error_pinned_err_type"
+    geom_error_pointrange(error_geom = "errorbar"),
+    class = "ggerror_error_pinned_error_geom"
   )
 })
 
-test_that("invalid err_type is rejected at the call site", {
+test_that("invalid error_geom is rejected at the call site", {
   expect_error(
-    geom_error(err_type = "bogus"),
-    class = "ggerror_error_bad_err_type"
+    geom_error(error_geom = "bogus"),
+    class = "ggerror_error_bad_error_geom"
   )
 })
 
@@ -119,19 +117,19 @@ test_that("negative error values are rejected with a classed condition", {
 
 # --- dispatch contract tests ------------------------------------------------
 
-# Regression guard for the draw_panel dispatch bug: when `err_type` was
+# Regression guard for the draw_panel dispatch bug: when `error_geom` was
 # silently stripped by Geom$draw_layer() (because draw_panel had `...` in
 # its formals), every wrapper rendered identically to the default errorbar.
-# This test catches that by asserting each err_type produces a distinct SVG.
-test_that("every err_type produces a distinct rendered SVG", {
+# This test catches that by asserting each error_geom produces a distinct SVG.
+test_that("every error_geom produces a distinct rendered SVG", {
   skip_if_not_installed("svglite")
 
   dat <- mtcars
   dat$rn <- rownames(mtcars)
 
-  render_svg <- function(err_type) {
+  render_svg <- function(error_geom) {
     p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
-      geom_error(ggplot2::aes(error = drat), err_type = err_type)
+      geom_error(ggplot2::aes(error = drat), error_geom = error_geom)
     path <- withr::local_tempfile(fileext = ".svg")
     ggplot2::ggsave(path, p, device = svglite::svglite,
                     width = 6, height = 8)
@@ -147,7 +145,7 @@ test_that("every err_type produces a distinct rendered SVG", {
   expect_length(unique(svgs), 4L)
 })
 
-# Side-by-side visual doppelgangers: each err_type must render the same as
+# Side-by-side visual doppelgangers: each error_geom must render the same as
 # the corresponding base ggplot2 geom given equivalent xmin/xmax mapping.
 test_that("geom_error_crossbar matches geom_crossbar visually", {
   skip_if_not_installed("vdiffr")
@@ -199,7 +197,7 @@ test_that("geom_error renders linerange variant", {
 
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg, rownames(mtcars))) +
     ggplot2::geom_point() +
-    geom_error(ggplot2::aes(error = drat), err_type = "linerange")
+    geom_error(ggplot2::aes(error = drat), error_geom = "linerange")
 
   vdiffr::expect_doppelganger("linerange-discrete-y", p)
 })
@@ -208,7 +206,7 @@ test_that("geom_error renders crossbar variant", {
   skip_if_not_installed("vdiffr")
 
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg, rownames(mtcars))) +
-    geom_error(ggplot2::aes(error = drat), err_type = "crossbar")
+    geom_error(ggplot2::aes(error = drat), error_geom = "crossbar")
 
   vdiffr::expect_doppelganger("crossbar-discrete-y", p)
 })
@@ -217,7 +215,7 @@ test_that("geom_error renders pointrange variant", {
   skip_if_not_installed("vdiffr")
 
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg, rownames(mtcars))) +
-    geom_error(ggplot2::aes(error = drat), err_type = "pointrange")
+    geom_error(ggplot2::aes(error = drat), error_geom = "pointrange")
 
   vdiffr::expect_doppelganger("pointrange-discrete-y", p)
 })
