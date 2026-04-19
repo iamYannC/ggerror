@@ -61,26 +61,6 @@ Supported values are `"errorbar"`, `"linerange"`, `"crossbar"`, and
 `"pointrange"`.
 The wrapper functions pin that choice on purpose.
 
-## Functional programming
-
-When you want to generate several variants programmatically, `geom_error()`
-works naturally with a vector of geom names.
-
-```{r, eval = requireNamespace("purrr", quietly = TRUE) && requireNamespace("patchwork", quietly = TRUE)}
-supported <- c("errorbar", "crossbar", "linerange", "pointrange")
-
-plots <- purrr::map(
-  supported,
-  \(geom_name) p + geom_error(aes(error = drat), error_geom = geom_name)
-)
-
-patchwork::wrap_plots(plots, ncol = 2)
-```
-
-The example above is optional.
-If `purrr` and `patchwork` are not installed, the rest of the vignette still
-works without them.
-
 ## Asymmetric errors
 
 Use `error_neg` and `error_pos` when the negative and positive extents differ.

@@ -2,48 +2,44 @@
 
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-0509-3609)
 
-`ggerror` is a lightweight wrapper around **ggplot2**'s error geoms.
-It replaces manual `ymin` / `ymax` or `xmin` / `xmax` wiring with one
-`error` aesthetic, automatic orientation inference, and a single dispatch
-point for the core range geoms.
+`ggerror` extends **ggplot2**'s range geoms with an error-first API.
+Instead of wiring `ymin` / `ymax` or `xmin` / `xmax` by hand, you supply
+`error`, or `error_neg` + `error_pos`, and use one interface across
+error bars, lineranges, crossbars, and pointranges.
 
 ### Motivation
-It reduces the easy-to-make mistakes in error-bar code: swapping bounds,
-choosing the wrong orientation, or reaching for the wrong geom variant.
-It also keeps the familiar `ggplot2` styling surface, including asymmetric
-errors and fixed per-side styling.
+
+It removes the mechanical error-bar work while keeping the usual `ggplot2`
+geoms, and adds asymmetric plus per-side styling when you need more control.
 
 ### Installation
-```r
+
+``` r
 pak::pak('iamyannc/ggerror')
 
 library(ggplot2)
 library(ggerror)
 
-p <- ggplot(mtcars, aes(mpg, rownames(mtcars))) +
+p <- ggplot(mtcars, aes(factor(cyl), mpg)) +
   geom_point()
 
-p + geom_error(aes(error = drat))
+p + geom_error(aes(error_neg = drat / 2, error_pos = drat))
 ```
 
-For a full tour of symmetric, asymmetric, one-sided, and per-side styling
-patterns, see `vignette("ggerror")`.
+For a full tour of symmetric, asymmetric, one-sided, and per-side styling,
+see `vignette("ggerror")`.
 
-<a href="man/figures/examples.png">
-  <img src="man/figures/examples.png" alt="ggerror example geoms" width="100%" />
-</a>
+<a href="man/figures/examples.png"> <img src="man/figures/examples.png" alt="ggerror example geoms" width="100%"/> </a>
 
 ### Supported geoms
 
-| ggplot2 Base | `geom_error(error_geom = ...)` | Specific Wrapper |
-| :--- | :--- | :--- |
-| `geom_errorbar` | `"errorbar"` (default) | `geom_error()` |
-| `geom_linerange` | `"linerange"` | `geom_error_linerange()` |
-| `geom_pointrange` | `"pointrange"` | `geom_error_pointrange()` |
-| `geom_crossbar` | `"crossbar"` | `geom_error_crossbar()` |
+| ggplot2 Base      | `geom_error(error_geom = ...)` | Specific Wrapper          |
+|:------------------|:-------------------------------|:--------------------------|
+| `geom_errorbar`   | `"errorbar"` (default)         | `geom_error()`            |
+| `geom_linerange`  | `"linerange"`                  | `geom_error_linerange()`  |
+| `geom_pointrange` | `"pointrange"`                 | `geom_error_pointrange()` |
+| `geom_crossbar`   | `"crossbar"`                   | `geom_error_crossbar()`   |
 
 ### Disclaimer
-This package was developed with the assistance of AI tools.
-All code has been reviewed by the author, who remains responsible for its
-quality.
-Ideas for new geoms are welcome.
+
+This package was developed with the assistance of AI tools. All code has been reviewed by the author, who remains responsible for its quality. Ideas for new geoms are welcome.

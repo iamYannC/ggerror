@@ -1,5 +1,7 @@
 # ggerror 0.3.0
 
+* `ggerror` now documents itself as an extension to 'ggplot2's range geoms,
+  rather than just a thin wrapper, reflecting the wider v0.3.0 feature set.
 * Added fixed per-side styling parameters for error bars: `colour_neg` /
   `colour_pos`, `fill_neg` / `fill_pos`, `linewidth_neg` / `linewidth_pos`,
   `linetype_neg` / `linetype_pos`, `alpha_neg` / `alpha_pos`, and
@@ -9,6 +11,8 @@
   `geom_error(aes(error_neg = 0, error_pos = se), width_neg = 0)`.
 * Added a `vignette("ggerror")` covering symmetric, asymmetric, one-sided,
   and per-side styling workflows.
+* Refreshed the README and example figure so the short-form package docs point
+  directly to the vignette and show v0.3.0 asymmetric / per-side usage.
 * Internal: preserved the existing fast path when no per-side overrides are
   supplied, and refactored split rendering so the shared midpoint is not
   drawn as an extra cap for `errorbar`.
