@@ -1,14 +1,15 @@
 Package: ggerror
-Title: A lightweight wrapper around ggplot2's error geoms. designed for simplicity & flexibility.
-Version: 0.1.0
-Authors@R: 
+Title: Modified Error Geoms for 'ggplot2'
+Version: 0.3.0
+Authors@R:
     person("Yann", "Cohen", , "yannco5@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0009-0509-3609"))
-Description: Provides a single geom layer, geom_error(), that wraps
-    ggplot2 error bar geoms with automatic orientation inference. Users
-    declare an error aesthetic and the package computes the min/max bounds
-    and dispatches to geom_errorbar(), geom_linerange(), geom_crossbar(),
-    or geom_pointrange().
+Description: Unifies the 'ggplot2' error geoms behind a single layer,
+    geom_error(), that accepts an 'error' aesthetic, infers orientation
+    from the data, computes min/max bounds, and dispatches to
+    geom_errorbar(), geom_linerange(), geom_crossbar(), or
+    geom_pointrange(). Adds support for asymmetric errors
+    via 'error_neg' and 'error_pos' aesthetics, including one-sided error bars.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -18,9 +19,14 @@ Imports:
     ggplot2 (>= 3.4.0),
     rlang
 Suggests:
+    knitr,
+    patchwork,
+    purrr,
+    rmarkdown,
     svglite,
     testthat (>= 3.0.0),
     vdiffr (>= 1.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 URL: https://github.com/iamYannC/ggerror
 BugReports: https://github.com/iamYannC/ggerror/issues
