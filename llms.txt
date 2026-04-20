@@ -43,7 +43,7 @@ asymmetric](reference/figures/examples_asymmetric.png)](https://iamyannc.github.
 
 For detailed examples of symmetric, asymmetric, one-sided, and per-side
 styling, see
-[`vignette("ggerror")`](https://iamyannc.github.io/ggerror/articles/ggerror.md).
+[`vignette("ggerror")`](https://iamyannc.github.io/ggerror/articles/ggerror.html).
 
 ### Supported geoms
 
