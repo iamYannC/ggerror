@@ -68,6 +68,15 @@ A thin wrapper around \code{\link[ggplot2:geom_linerange]{ggplot2::geom_errorbar
 and figures out orientation from the data. For asymmetric errors, use
 \code{error_neg} + \code{error_pos} instead of \code{error}.
 }
+\section{Niche parameters (via \code{...})}{
+
+\itemize{
+\item \code{zero_threshold} — numeric tolerance (default \code{1e-8}) for the
+uniformly-zero check that drives the \code{0 -> NA} deprecation.
+\item \code{silent_zero_warning} — \code{TRUE} suppresses that deprecation.
+}
+}
+
 \section{Aesthetics}{
 
 \code{geom_error()} requires \code{x}, \code{y}, and one of:

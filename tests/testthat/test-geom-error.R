@@ -186,7 +186,8 @@ test_that("one-sided bar (error_neg = 0) renders only the positive side", {
                hi = c(0.4, 0.5, 0.6)),
     ggplot2::aes(x, y)
   ) +
-    geom_error(ggplot2::aes(error_neg = 0, error_pos = hi))
+    geom_error(ggplot2::aes(error_neg = 0, error_pos = hi),
+               silent_zero_warning = TRUE)
 
   built <- ggplot2::ggplot_build(p)
   ld <- built$data[[1]]
@@ -288,7 +289,8 @@ test_that("per-side width suppresses the shared-bound cap on horizontal bars", {
     ggplot2::geom_point() +
     geom_error(
       ggplot2::aes(error_neg = 0, error_pos = drat),
-      width_neg = 0
+      width_neg = 0,
+      silent_zero_warning = TRUE
     )
 
   vdiffr::expect_doppelganger("one-sided-width-neg-horizontal", p)
@@ -301,7 +303,8 @@ test_that("per-side width suppresses the shared-bound cap on vertical bars", {
     ggplot2::geom_point() +
     geom_error(
       ggplot2::aes(error_neg = 0, error_pos = drat),
-      width_neg = 0
+      width_neg = 0,
+      silent_zero_warning = TRUE
     )
 
   vdiffr::expect_doppelganger("one-sided-width-neg-vertical", p)
@@ -315,7 +318,8 @@ test_that("width_neg does not leak to the positive side via partial matching", {
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
     geom_error(
       ggplot2::aes(error_neg = 0, error_pos = drat),
-      width_neg = 0
+      width_neg = 0,
+      silent_zero_warning = TRUE
     )
 
   built <- ggplot2::ggplot_build(p)

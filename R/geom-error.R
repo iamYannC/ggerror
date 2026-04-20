@@ -17,6 +17,11 @@
 #'   `geom_error()` dispatches to under the hood.
 #' @param orientation Either `NA` (the default; inferred from the data),
 #'   `"x"` (vertical error), or `"y"` (horizontal error).
+#' @section Niche parameters (via `...`):
+#' - `zero_threshold` — numeric tolerance (default `1e-8`) for the
+#'   uniformly-zero check that drives the `0 -> NA` deprecation.
+#' - `silent_zero_warning` — `TRUE` suppresses that deprecation.
+#'
 #' @param sign_aware If `TRUE`, signed values in `error` are routed per
 #'   row: positive values extend the bar in the positive direction,
 #'   negative values extend it in the negative direction, and the
@@ -189,6 +194,7 @@ GeomError <- ggplot2::ggproto(
 
   extra_params = c(
     "na.rm", "error_geom", "orientation", "sign_aware",
+    "zero_threshold", "silent_zero_warning",
     per_side_param_names
   ),
 
@@ -209,6 +215,12 @@ GeomError <- ggplot2::ggproto(
         data[[nm]] <- as.double(data[[nm]])
       }
     }
+
+    check_deprecated_zero_side(
+      data,
+      zero_threshold      = params$zero_threshold      %||% 1e-8,
+      silent_zero_warning = params$silent_zero_warning %||% FALSE
+    )
 
     if (isTRUE(params$sign_aware) && "error" %in% names(data)) {
       e <- data$error

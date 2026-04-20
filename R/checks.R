@@ -160,6 +160,37 @@ check_nonneg_aes <- function(values, aes_name) {
 
 #' @keywords internal
 #' @noRd
+check_deprecated_zero_side <- function(data, zero_threshold = 1e-8,
+                                       silent_zero_warning = FALSE) {
+  if (isTRUE(silent_zero_warning)) return(invisible(data))
+
+  for (nm in c("error_neg", "error_pos")) {
+    if (!nm %in% names(data)) next
+    v <- data[[nm]]
+    v <- v[!is.na(v)]
+    if (!length(v)) next
+    if (all(abs(v) <= zero_threshold)) {
+      opposite <- if (nm == "error_neg") "error_pos" else "error_neg"
+      lifecycle::deprecate_warn(
+        when = "1.0.0",
+        what = I(sprintf("Using `0` in %s to signal a one-sided bar", nm)),
+        with = I(sprintf("`NA` in aes(%s)", nm)),
+        details = c(
+          i = sprintf(
+            "Replace the zero column with `NA`: aes(%s = NA, %s = ...).",
+            nm, opposite
+          ),
+          i = "Silence this warning with `silent_zero_warning = TRUE`, \\
+               or tune with `zero_threshold`."
+        )
+      )
+    }
+  }
+  invisible(data)
+}
+
+#' @keywords internal
+#' @noRd
 check_error_aes <- function(data) {
   for (nm in c("error", "error_neg", "error_pos")) {
     if (nm %in% names(data)) {
