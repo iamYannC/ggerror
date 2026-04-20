@@ -19,6 +19,10 @@
 #' @param orientation `NA` (default, inferred), `"x"`, or `"y"`.
 #' @param na.rm If `TRUE`, drop `NA` values from the summarised axis before
 #'   applying `fun`.
+#' @param conf.int Confidence level forwarded to `fun` when the function
+#'   accepts a `conf.int` argument (e.g. `fun = "mean_ci"` or a custom
+#'   `fun.data` with that formal). Ignored for funs that don't declare it,
+#'   so it's safe to leave at the default when using `fun = "mean_se"`.
 #' @param ... Additional parameters passed through to [geom_error()], e.g.
 #'   per-side styling (`colour_neg`, `width_pos`, …).
 #'
@@ -30,6 +34,10 @@
 #' ggplot(mtcars, aes(factor(cyl), mpg)) +
 #'   stat_error(fun = "mean_ci", error_geom = "pointrange")
 #'
+#' # 90% CI with NA-tolerant summarising:
+#' ggplot(mtcars, aes(factor(cyl), mpg)) +
+#'   stat_error(fun = "mean_ci", conf.int = 0.9, na.rm = TRUE)
+#'
 #' @export
 stat_error <- function(mapping = NULL, data = NULL,
                        geom = NULL, position = "identity",
@@ -38,12 +46,14 @@ stat_error <- function(mapping = NULL, data = NULL,
                        error_geom = "errorbar",
                        orientation = NA,
                        na.rm = FALSE,
+                       conf.int = 0.95,
                        show.legend = NA,
                        inherit.aes = TRUE) {
   call <- rlang::caller_env()
   params <- list(...)
   check_error_geom(error_geom, call = call)
   check_orientation(orientation, call = call)
+  check_conf_int(conf.int, call = call)
   check_per_side_params(params, call = call)
 
   ggplot2::layer(
@@ -58,7 +68,8 @@ stat_error <- function(mapping = NULL, data = NULL,
       fun         = fun,
       error_geom  = error_geom,
       orientation = orientation,
-      na.rm       = na.rm
+      na.rm       = na.rm,
+      conf.int    = conf.int
     ), params)
   )
 }
@@ -72,10 +83,11 @@ StatError <- ggplot2::ggproto(
 
   required_aes = c("x", "y"),
 
-  extra_params = c("na.rm", "fun", "orientation"),
+  extra_params = c("na.rm", "fun", "conf.int", "orientation"),
 
   setup_params = function(data, params) {
     params$fun         <- params$fun %||% "mean_se"
+    params$conf.int    <- params$conf.int %||% 0.95
     params$orientation <- infer_orientation(data, params)
     params$flipped_aes <- params$orientation == "y"
     params
@@ -86,11 +98,12 @@ StatError <- ggplot2::ggproto(
                            orientation = NA,
                            flipped_aes = FALSE,
                            na.rm = FALSE,
+                           conf.int = 0.95,
                            ...) {
     fn   <- resolve_stat_fun(fun)
     data <- ggplot2::flip_data(data, flipped_aes)
     y    <- if (isTRUE(na.rm)) data$y[!is.na(data$y)] else data$y
-    res  <- validate_stat_fun_return(fn(y))
+    res  <- validate_stat_fun_return(call_stat_fun(fn, y, conf.int))
 
     out <- data.frame(
       x           = data$x[1],
@@ -123,6 +136,18 @@ GeomErrorStat <- ggplot2::ggproto(
     params
   }
 )
+
+#' @keywords internal
+#' @noRd
+call_stat_fun <- function(fn, y, conf.int) {
+  fmls     <- names(formals(fn))
+  has_dots <- "..." %in% fmls
+  args     <- list(y)
+  if (has_dots || "conf.int" %in% fmls) {
+    args$conf.int <- conf.int
+  }
+  do.call(fn, args)
+}
 
 #' @keywords internal
 #' @noRd

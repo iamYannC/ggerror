@@ -17,6 +17,7 @@ stat_error(
   error_geom = "errorbar",
   orientation = NA,
   na.rm = FALSE,
+  conf.int = 0.95,
   show.legend = NA,
   inherit.aes = TRUE
 )
@@ -43,6 +44,11 @@ a single-row data.frame with columns \code{y}, \code{ymin}, \code{ymax}.}
 
 \item{na.rm}{If \code{TRUE}, drop \code{NA} values from the summarised axis before
 applying \code{fun}.}
+
+\item{conf.int}{Confidence level forwarded to \code{fun} when the function
+accepts a \code{conf.int} argument (e.g. \code{fun = "mean_ci"} or a custom
+\code{fun.data} with that formal). Ignored for funs that don't declare it,
+so it's safe to leave at the default when using \code{fun = "mean_se"}.}
 }
 \description{
 \code{stat_error()} computes the error bounds from raw observation-level data
@@ -58,6 +64,10 @@ ggplot(mtcars, aes(factor(cyl), mpg)) + stat_error()
 
 ggplot(mtcars, aes(factor(cyl), mpg)) +
   stat_error(fun = "mean_ci", error_geom = "pointrange")
+
+# 90\% CI with NA-tolerant summarising:
+ggplot(mtcars, aes(factor(cyl), mpg)) +
+  stat_error(fun = "mean_ci", conf.int = 0.9, na.rm = TRUE)
 
 }
 \keyword{datasets}

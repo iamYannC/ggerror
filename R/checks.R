@@ -40,6 +40,21 @@ check_orientation <- function(orientation, call = rlang::caller_env()) {
 
 #' @keywords internal
 #' @noRd
+check_conf_int <- function(conf.int, call = rlang::caller_env()) {
+  if (!is.numeric(conf.int) || length(conf.int) != 1L ||
+      is.na(conf.int) || conf.int <= 0 || conf.int >= 1) {
+    cli::cli_abort(
+      "{.arg conf.int} must be a single number strictly between 0 and 1, \\
+       not {.val {conf.int}}.",
+      class = "ggerror_error_bad_conf_int",
+      call  = call
+    )
+  }
+  invisible(conf.int)
+}
+
+#' @keywords internal
+#' @noRd
 check_pinned_error_geom <- function(is_missing, fn, type,
                                     call = rlang::caller_env()) {
   if (is_missing) {
