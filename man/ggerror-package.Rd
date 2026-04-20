@@ -14,6 +14,7 @@ Extends the 'ggplot2' error geoms. geom_error() accepts an 'error' aesthetic wit
 Useful links:
 \itemize{
   \item \url{https://github.com/iamYannC/ggerror}
+  \item \url{https://iamyannc.github.io/ggerror/}
   \item Report bugs at \url{https://github.com/iamYannC/ggerror/issues}
 }
 
