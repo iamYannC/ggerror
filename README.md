@@ -27,7 +27,6 @@ p + geom_error_pointrange(aes(error_neg = drat / 2, error_pos = drat, linetype_n
 # One-sided error bars, using the error_geom argument
 p + geom_error(error_geom = "linerange", aes(error_neg = 0, error_pos = drat), width_neg = 0)
 
-
 ```
 #### Symmetric error bars
 
@@ -39,7 +38,7 @@ p + geom_error(error_geom = "linerange", aes(error_neg = 0, error_pos = drat), w
 
 
 For detailed examples of symmetric, asymmetric, one-sided, and per-side styling,
-see `vignette("ggerror")`.
+see [`vignette("ggerror")`](https://iamyannc.github.io/ggerror/articles/ggerror.html).
 
 
 ### Supported geoms
