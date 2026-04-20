@@ -145,17 +145,46 @@ check_nonneg_aes <- function(values, aes_name) {
       class = "ggerror_error_bad_error_aes"
     )
   }
-  neg <- !is.na(values) & values < 0
-  if (any(neg)) {
+  neg <- which(!is.na(values) & values < 0)
+  if (length(neg)) {
+    shown  <- utils::head(neg, 5)
+    more   <- length(neg) - length(shown)
+    suffix <- if (more > 0) sprintf(" (+ %d more)", more) else ""
     cli::cli_abort(
       c(
         "{.field {aes_name}} aesthetic must be non-negative.",
-        i = "Found {sum(neg)} negative value{?s}."
+        i = "Found {length(neg)} {cli::qty(length(neg))}negative value{?s}.",
+        i = "{cli::qty(length(shown))}Row{?s}: {.val {shown}}{suffix}.",
+        i = "Pass {.code sign_aware = TRUE} to route signed values, \\
+             or wrap with {.fn abs}."
       ),
       class = "ggerror_error_negative_error_aes"
     )
   }
   invisible(values)
+}
+
+#' @keywords internal
+#' @noRd
+check_na_in_symmetric_error <- function(data) {
+  if (!"error" %in% names(data)) return(invisible(data))
+  na_rows <- which(is.na(data$error))
+  if (!length(na_rows)) return(invisible(data))
+
+  shown  <- utils::head(na_rows, 5)
+  more   <- length(na_rows) - length(shown)
+  suffix <- if (more > 0) sprintf(" (+ %d more)", more) else ""
+  cli::cli_warn(
+    c(
+      "{.field error} aesthetic contains {length(na_rows)} \\
+       {cli::qty(length(na_rows))} {.val NA} value{?s}.",
+      i = "{cli::qty(length(shown))} Row{?s}: {.val {shown}}{suffix}.",
+      i = "NA rows render no bar. For explicit one-sided bars use \\
+           {.field error_neg} / {.field error_pos} with {.val NA}."
+    ),
+    class = "ggerror_warn_error_na"
+  )
+  invisible(data)
 }
 
 #' @keywords internal

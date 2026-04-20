@@ -222,6 +222,10 @@ GeomError <- ggplot2::ggproto(
       silent_zero_warning = params$silent_zero_warning %||% FALSE
     )
 
+    # NA in symmetric `error` warns — the user likely meant to omit that row
+    # entirely, or to pass `NA` through error_neg/error_pos for one-sided.
+    if (!isTRUE(params$sign_aware)) check_na_in_symmetric_error(data)
+
     if (isTRUE(params$sign_aware) && "error" %in% names(data)) {
       e <- data$error
       data$error_neg <- ifelse(!is.na(e) & e < 0, -e, NA_real_)
