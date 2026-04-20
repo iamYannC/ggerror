@@ -1,3 +1,7 @@
+# ggerror 0.4.0
+
+* Added a pkgdown site at <https://iamyannc.github.io/ggerror/>.
+
 # ggerror 0.3.0
 
 * `ggerror` now includes a complete aestetic support for one sided error bars.
