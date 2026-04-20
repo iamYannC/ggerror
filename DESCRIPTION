@@ -1,6 +1,6 @@
 Package: ggerror
 Title: Extended Error Geoms for 'ggplot2'
-Version: 0.4.0
+Version: 1.0.0
 Authors@R:
     person("Yann", "Cohen", , "yannco5@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0009-0509-3609"))

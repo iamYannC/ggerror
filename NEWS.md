@@ -1,3 +1,24 @@
+# ggerror 1.0.0
+
+* New `stat_error()` summarises raw observation-level data into error
+  bounds. Accepts `fun = "mean_se"` (default), `"mean_ci"` (95% normal-
+  theory CI, no Hmisc dep), or a custom function following ggplot2's
+  `fun.data` contract. Also available via `geom_error(stat = "error")`.
+* New `sign_aware = TRUE` routes signed per-row values (typically
+  residuals) into one-sided bars whose direction encodes the sign.
+  Enables one-layer `lm()` residual plots.
+* `aes(error_neg = NA, error_pos = ...)` is now the canonical idiom for
+  one-sided bars — the cap and stem on the NA side auto-suppress. Passing
+  `0` still renders but emits a soft deprecation warning; opt out with
+  `silent_zero_warning = TRUE` or tune the detection threshold via
+  `zero_threshold`.
+* New diagnostics: NA values in symmetric `error` now warn with row
+  indices (class `ggerror_warn_error_na`); negative values without
+  `sign_aware` abort with row indices and a migration suggestion (class
+  `ggerror_error_negative_error_aes`).
+* New vignette `lm-residuals` covering `stat_error()` and `sign_aware`
+  with an `lm()` residual-plot demo.
+
 # ggerror 0.4.0
 
 * Added a pkgdown site at <https://iamyannc.github.io/ggerror/>.
