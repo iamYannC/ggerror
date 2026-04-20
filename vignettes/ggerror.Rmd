@@ -1,10 +1,13 @@
 ---
 title: "Using ggerror"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    css: vignette.css
 vignette: >
   %\VignetteIndexEntry{Using ggerror}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+
 ---
 
 ```{r setup, include = FALSE}
@@ -26,8 +29,9 @@ library(ggerror)
 ## Why `ggerror`?
 
 Base `ggplot2` gives you several different error geoms, but using them means
-deciding which geom you need, which axis the error should follow, and how to
+deciding on orientation, which axis the error should follow, and how to
 wire the lower and upper bounds correctly.
+It creates a overhead and a cluncky DX.
 `ggerror` collapses that into one layer and one error-focused API.
 
 Everything in this vignette uses `mtcars`, so you can copy the examples
@@ -36,7 +40,7 @@ directly.
 ## Symmetric errors
 
 ```{r}
-p <- ggplot(mtcars, aes(mpg, rownames(mtcars))) +
+p <- ggplot(mtcars[1:10,], aes(mpg, rownames(mtcars[1:10,]))) +
   geom_point()
 
 p + geom_error(aes(error = drat))
@@ -45,9 +49,9 @@ p + geom_error(aes(error = drat))
 `geom_error()` infers orientation from the data.
 When one axis is discrete and the other is numeric, the error expands along the
 numeric axis.
-By default it dispatches to `geom_errorbar()`.
+The default geom is `errorbbar`, which triggers under the hood `geom_errorbar()`.
 
-## Choosing the dispatch geom
+## Choosing the error geom
 
 You can pick the base range geom either through `error_geom` or via one of the
 pinned wrapper functions.
@@ -57,34 +61,44 @@ p + geom_error(aes(error = drat), error_geom = "crossbar")
 p + geom_error_crossbar(aes(error = drat))
 ```
 
-Supported values are `"errorbar"`, `"linerange"`, `"crossbar"`, and
+Supported values for `error_geom` are `"errorbar"`, `"linerange"`, `"crossbar"`, and
 `"pointrange"`.
-The wrapper functions pin that choice on purpose.
+
+<div class="tip">
+💡 **Tip:** Make use of `geom_error()` for a functional programming approach by using the `error_geom` argument with `purrr::map()`.
+</div>
+
+```{r functional-example}
+supported_geoms <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
+purrr::map(supported_geoms, \(err) p + geom_error(aes(error = drat), error_geom = err))
+```
+
 
 ## Asymmetric errors
 
 Use `error_neg` and `error_pos` when the negative and positive extents differ.
 
 ```{r}
-ggplot(mtcars, aes(factor(cyl), mpg)) +
-  geom_point() +
-  geom_error(aes(error_neg = drat / 2, error_pos = drat))
+  p + geom_error(aes(
+    error_neg = drat / 2,
+    error_pos = drat)
+    )
 ```
 
 `error_neg` extends in the negative direction and `error_pos` extends in the
 positive direction, regardless of whether the error is horizontal or vertical.
 Both must be supplied together.
-If you want symmetric behavior, use `error`.
+Not having to deal with orientation and `min`/`max` reduces overhead and ensures you stay focused on displaying the data, rather than the mechanics of the plot.
 
 ## One-sided bars
 
 Setting one side to `0` gives you a one-sided error bar.
 
 ```{r}
-ggplot(mtcars, aes(factor(cyl), mpg)) +
-  geom_point() +
-  geom_error(
-    aes(error_neg = 0, error_pos = drat),
+p +
+  geom_error(aes(
+    error_neg = 0,
+    error_pos = drat),
     width_neg = 0
   )
 ```
@@ -93,20 +107,20 @@ On its own, `aes(error_neg = 0, error_pos = drat)` still draws a cap at the
 observation value at the default width, because the negative side has zero
 length but inherits the shared cap width.
 Setting `width_neg = 0` removes that cap and gives you a genuine one-sided
-bar: in the split `errorbar` path, `ggerror` draws only the outer caps, so
-the cap at the shared bound is suppressed.
+bar.
 
-## Advanced: per-side styling
+## More customization: per-side styling
 
-For finer control, the negative and positive halves can be styled separately
+For finer control, the negative and positive sides can be styled separately
 with fixed `_neg` and `_pos` parameters for `colour`, `fill`, `linewidth`,
 `linetype`, `alpha`, and `width`.
 
 ```{r}
-ggplot(mtcars, aes(factor(cyl), mpg)) +
-  geom_point() +
-  geom_error(
-    aes(error_neg = drat / 2, error_pos = drat),
+p +
+  geom_error(aes(
+    error_neg = drat / 2,
+    error_pos = drat),
+
     colour_neg = "steelblue",
     colour_pos = "firebrick",
     linewidth_neg = 0.3,
@@ -115,9 +129,11 @@ ggplot(mtcars, aes(factor(cyl), mpg)) +
 ```
 
 ```{r}
-ggplot(mtcars, aes(factor(cyl), mpg)) +
-  geom_error(
-    aes(error_neg = drat / 2, error_pos = drat),
+p +
+  geom_error(aes(
+    error_neg = drat / 2,
+    error_pos = drat),
+    
     error_geom = "crossbar",
     fill_neg = "grey90",
     fill_pos = "grey60",
@@ -126,11 +142,9 @@ ggplot(mtcars, aes(factor(cyl), mpg)) +
   )
 ```
 
-These per-side values are fixed parameters, not mapped aesthetics.
-In other words, use `colour_neg = "steelblue"`, not
-`aes(colour_neg = some_column)`.
+## Extending ggerror
 
-For `geom_error_pointrange()`, the shared point keeps the base point
-aesthetics while the line halves can still differ.
-`shape`, `size`, and `stroke` are not split because there is still only one
-central point per observation.
+If you know of, or need, a new error geom, please open an issue on the [GitHub repository](https://github.com/iamyannc/ggerror/issues).
+My first motiviation was to simplify the heck out of the error geoms, reducing the aesthetics to a single `error` aesthetic. The rest (asymmetric, one-sided, etc) are just niceties that I added along the way.
+
+
