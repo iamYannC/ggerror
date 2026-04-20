@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Extends the 'ggplot2' range geoms with an error-first API. geom_error() accepts an 'error' aesthetic, or 'error_neg' and 'error_pos' for asymmetric cases, infers orientation from the data, computes bounds, and dispatches to geom_errorbar(), geom_linerange(), geom_crossbar(), or geom_pointrange(). Also supports fixed per-side styling for asymmetric or one-sided error bars.
+Extends the 'ggplot2' error geoms. geom_error() accepts an 'error' aesthetic with auto-inference of the orientation. It also supports 'error_neg' and 'error_pos' for asymmetric cases, with full control over aesthetics per side, such as color, width etc... The package also includes a vignette covering it's main usecases - symmetric, asymmetric, one-sided, and per-side styling.
 }
 \seealso{
 Useful links:
