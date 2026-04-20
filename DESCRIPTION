@@ -25,5 +25,5 @@ Suggests:
     vdiffr (>= 1.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/iamYannC/ggerror
+URL: https://github.com/iamYannC/ggerror, https://iamyannc.github.io/ggerror/
 BugReports: https://github.com/iamYannC/ggerror/issues
