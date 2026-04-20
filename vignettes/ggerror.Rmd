@@ -80,7 +80,7 @@ Supported values for `error_geom` are `"errorbar"`, `"linerange"`, `"crossbar"`,
 💡 **Tip:** Make use of `geom_error()` for a functional programming approach by using the `error_geom` argument with `purrr::map()`.
 </div>
 
-```{r functional-example}
+```{r functional-example, eval = requireNamespace("purrr", quietly = TRUE)}
 supported_geoms <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
 purrr::map(supported_geoms, \(err) p + geom_error(aes(error = drat), error_geom = err))
 ```
