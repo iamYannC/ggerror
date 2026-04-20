@@ -11,6 +11,11 @@ reference:
   - geom_error_crossbar
   - geom_error_pointrange
 
+- title: "Summarising raw data"
+  desc: "Compute error bounds from observation-level data."
+  contents:
+  - stat_error
+
 - title: "Package"
   contents:
   - ggerror-package
@@ -20,3 +25,4 @@ articles:
   navbar: ~
   contents:
   - ggerror
+  - lm-residuals

@@ -61,12 +61,28 @@
 #'   geom_error(aes(error = drat), error_geom = "pointrange")
 #'
 #' # Asymmetric: bar extends drat/2 below and drat above each point
-#' ggplot(mtcars, aes(factor(cyl), mpg)) +
+#' ggplot(mtcars, aes(mpg, rownames(mtcars))) +
 #'   geom_point() +
 #'   geom_error(aes(error_neg = drat / 2, error_pos = drat))
 #'
-#' # Style the negative and positive halves separately
+#' # One-sided: set the unused side to NA (cap + stem auto-suppressed)
+#' ggplot(mtcars, aes(mpg, rownames(mtcars))) +
+#'   geom_point() +
+#'   geom_error(aes(error_neg = NA, error_pos = drat))
+#'
+#' # Summarise raw data: mean +/- SE per group (see also stat_error())
 #' ggplot(mtcars, aes(factor(cyl), mpg)) +
+#'   geom_error(stat = "error", error_geom = "pointrange")
+#'
+#' # Signed residual plot: bar extends from fitted toward observed
+#' model <- lm(mpg ~ wt, data = mtcars)
+#' ggplot(mtcars, aes(fitted(model), mpg)) +
+#'   geom_point() +
+#'   geom_error(aes(error = resid(model)),
+#'              sign_aware = TRUE, orientation = "x")
+#'
+#' # Style the negative and positive halves separately
+#' ggplot(mtcars, aes(mpg, rownames(mtcars))) +
 #'   geom_point() +
 #'   geom_error(
 #'     aes(error_neg = drat / 2, error_pos = drat),
