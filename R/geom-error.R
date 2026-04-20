@@ -77,11 +77,23 @@ geom_error <- function(mapping = NULL, data = NULL,
   check_orientation(orientation, call = call)
   check_per_side_params(params, call = call)
 
+  use_stat_error <- is.character(stat) && identical(stat, "error")
+  if (use_stat_error) {
+    stat_obj <- StatError
+    geom_obj <- GeomErrorStat
+    extra    <- list(fun = params$fun %||% "mean_se")
+    params$fun <- NULL
+  } else {
+    stat_obj <- stat
+    geom_obj <- GeomError
+    extra    <- list()
+  }
+
   ggplot2::layer(
-    geom        = GeomError,
+    geom        = geom_obj,
     mapping     = mapping,
     data        = data,
-    stat        = stat,
+    stat        = stat_obj,
     position    = position,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
@@ -89,7 +101,7 @@ geom_error <- function(mapping = NULL, data = NULL,
       error_geom  = error_geom,
       orientation = orientation,
       na.rm       = na.rm
-    ), params)
+    ), extra, params)
   )
 }
 
