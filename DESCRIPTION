@@ -18,6 +18,7 @@ Imports:
     rlang
 Suggests:
     knitr,
+    purrr,
     rmarkdown,
     svglite,
     testthat (>= 3.0.0),
