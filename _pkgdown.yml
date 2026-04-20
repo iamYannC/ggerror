@@ -1,0 +1,22 @@
+url: https://iamyannc.github.io/ggerror/
+template:
+  bootstrap: 5
+
+reference:
+- title: "Creating error geoms"
+  desc: "The main entry point and its pinned wrappers."
+  contents:
+  - geom_error
+  - geom_error_linerange
+  - geom_error_crossbar
+  - geom_error_pointrange
+
+- title: "Package"
+  contents:
+  - ggerror-package
+
+articles:
+- title: "Articles"
+  navbar: ~
+  contents:
+  - ggerror
