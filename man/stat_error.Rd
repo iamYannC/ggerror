@@ -31,9 +31,10 @@ layer arguments.}
 \item{...}{Additional parameters passed through to \code{\link[=geom_error]{geom_error()}}, e.g.
 per-side styling (\code{colour_neg}, \code{width_pos}, …).}
 
-\item{fun}{One of \code{"mean_se"} (default), \code{"mean_ci"} (= \code{mean_cl_normal}),
-or a function taking a numeric vector and returning a single-row
-data.frame with columns \code{y}, \code{ymin}, \code{ymax}.}
+\item{fun}{One of \code{"mean_se"} (default, uses \code{\link[ggplot2:mean_se]{ggplot2::mean_se()}}),
+\code{"mean_ci"} (mean with 95\% normal-theory CI via \code{\link[stats:TDist]{stats::qt()}}; no
+Hmisc dependency), or a function taking a numeric vector and returning
+a single-row data.frame with columns \code{y}, \code{ymin}, \code{ymax}.}
 
 \item{error_geom}{One of \code{"errorbar"} (default), \code{"linerange"},
 \code{"crossbar"}, \code{"pointrange"}.}

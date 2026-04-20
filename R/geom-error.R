@@ -17,6 +17,12 @@
 #'   `geom_error()` dispatches to under the hood.
 #' @param orientation Either `NA` (the default; inferred from the data),
 #'   `"x"` (vertical error), or `"y"` (horizontal error).
+#' @param sign_aware If `TRUE`, signed values in `error` are routed per
+#'   row: positive values extend the bar in the positive direction,
+#'   negative values extend it in the negative direction, and the
+#'   opposite side is suppressed. Useful for residual plots where
+#'   `x`/`y` is the fitted value and the bar extends toward the observed
+#'   value. Incompatible with `stat = "error"`. Default `FALSE`.
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical. Should this layer be included in the legends?
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
@@ -27,7 +33,8 @@
 #' - `error_neg` **and** `error_pos` — asymmetric; the bar extends
 #'   `error_neg` in the negative direction and `error_pos` in the positive
 #'   direction along the non-categorical axis. For a one-sided bar, set
-#'   the unused side to `0` explicitly.
+#'   the unused side to `NA` — the cap, stem, and shared-bound cap on
+#'   that side are all suppressed.
 #'
 #' Mixing `error` with `error_neg` / `error_pos` is an error, as is
 #' providing only one of the asymmetric pair.
@@ -68,6 +75,7 @@ geom_error <- function(mapping = NULL, data = NULL,
                        ...,
                        error_geom = "errorbar",
                        orientation = NA,
+                       sign_aware = FALSE,
                        na.rm = FALSE,
                        show.legend = NA,
                        inherit.aes = TRUE) {
@@ -78,6 +86,18 @@ geom_error <- function(mapping = NULL, data = NULL,
   check_per_side_params(params, call = call)
 
   use_stat_error <- is.character(stat) && identical(stat, "error")
+  if (use_stat_error && isTRUE(sign_aware)) {
+    cli::cli_abort(
+      c(
+        "{.arg sign_aware} cannot be combined with \\
+         {.code stat = \"error\"}.",
+        i = "{.fn stat_error} summarises raw data; there is no sign to route.",
+        i = "Drop one of {.arg sign_aware} or {.code stat = \"error\"}."
+      ),
+      class = "ggerror_error_sign_aware_with_stat",
+      call  = call
+    )
+  }
   if (use_stat_error) {
     stat_obj <- StatError
     geom_obj <- GeomErrorStat
@@ -100,6 +120,7 @@ geom_error <- function(mapping = NULL, data = NULL,
     params      = c(list(
       error_geom  = error_geom,
       orientation = orientation,
+      sign_aware  = isTRUE(sign_aware),
       na.rm       = na.rm
     ), extra, params)
   )
@@ -167,7 +188,7 @@ GeomError <- ggplot2::ggproto(
   draw_key = ggplot2::draw_key_path,
 
   extra_params = c(
-    "na.rm", "error_geom", "orientation",
+    "na.rm", "error_geom", "orientation", "sign_aware",
     per_side_param_names
   ),
 
@@ -180,19 +201,37 @@ GeomError <- ggplot2::ggproto(
 
   setup_data = function(data, params) {
     check_error_aes_combination(data)
+
+    # Coerce error columns to double so logical NA (from aes(error_neg = NA))
+    # is accepted by the non-negative check.
+    for (nm in c("error", "error_neg", "error_pos")) {
+      if (nm %in% names(data) && !is.numeric(data[[nm]])) {
+        data[[nm]] <- as.double(data[[nm]])
+      }
+    }
+
+    if (isTRUE(params$sign_aware) && "error" %in% names(data)) {
+      e <- data$error
+      data$error_neg <- ifelse(!is.na(e) & e < 0, -e, NA_real_)
+      data$error_pos <- ifelse(!is.na(e) & e > 0,  e, NA_real_)
+      data$error <- NULL
+    }
+
     check_error_aes(data)
 
     data$flipped_aes <- params$flipped_aes
     data <- ggplot2::flip_data(data, params$flipped_aes)
 
-    # Error range along canonical y-axis
+    # Error range along canonical y-axis. NA on a side -> suppressed cap/stem.
     if ("error" %in% names(data)) {
       data$ymin <- data$y - data$error
       data$ymax <- data$y + data$error
       data$error <- NULL
     } else {
-      data$ymin <- data$y - data$error_neg
-      data$ymax <- data$y + data$error_pos
+      data$ymin <- ifelse(is.na(data$error_neg), NA_real_,
+                          data$y - data$error_neg)
+      data$ymax <- ifelse(is.na(data$error_pos), NA_real_,
+                          data$y + data$error_pos)
       data$error_neg <- NULL
       data$error_pos <- NULL
     }
@@ -233,8 +272,9 @@ GeomError <- ggplot2::ggproto(
     )
 
     has_per_side <- any(!vapply(overrides, is.null, logical(1)))
+    has_na_side  <- any(is.na(data$ymin) | is.na(data$ymax))
 
-    if (!has_per_side) {
+    if (!has_per_side && !has_na_side) {
       return(dispatch_error_geom(
         error_geom = error_geom,
         data = data,
@@ -268,6 +308,8 @@ GeomError <- ggplot2::ggproto(
 dispatch_error_geom <- function(error_geom, data, panel_params, coord,
                                 flipped_aes, lineend, linejoin, fatten,
                                 na.rm) {
+  if (!nrow(data)) return(grid::nullGrob())
+
   base <- list(
     data = data,
     panel_params = panel_params,
@@ -369,7 +411,9 @@ draw_per_side <- function(data, overrides, error_geom, flipped_aes,
 #' @keywords internal
 #' @noRd
 build_per_side_data <- function(data, overrides, side) {
-  half <- data
+  bound <- if (identical(side, "neg")) "ymin" else "ymax"
+  half  <- data[!is.na(data[[bound]]), , drop = FALSE]
+  if (!nrow(half)) return(half)
 
   if (identical(side, "neg")) {
     half$ymax <- half$y
@@ -430,8 +474,13 @@ draw_per_side_errorbar <- function(data, overrides, flipped_aes,
 #' @keywords internal
 #' @noRd
 build_errorbar_segments <- function(data, overrides, side) {
+  bound <- if (identical(side, "neg")) "ymin" else "ymax"
+  keep  <- !is.na(data[[bound]])
+  data  <- data[keep, , drop = FALSE]
+  if (!nrow(data)) return(data.frame())
+
   styled <- build_per_side_data(data, overrides, side)
-  width <- resolve_per_side_width(data, overrides, side)
+  width  <- resolve_per_side_width(data, overrides, side)
 
   stem <- styled
   stem$xend <- styled$x

@@ -17,6 +17,7 @@ geom_error(
   ...,
   error_geom = "errorbar",
   orientation = NA,
+  sign_aware = FALSE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -47,6 +48,13 @@ to \code{"identity"}.}
 \item{orientation}{Either \code{NA} (the default; inferred from the data),
 \code{"x"} (vertical error), or \code{"y"} (horizontal error).}
 
+\item{sign_aware}{If \code{TRUE}, signed values in \code{error} are routed per
+row: positive values extend the bar in the positive direction,
+negative values extend it in the negative direction, and the
+opposite side is suppressed. Useful for residual plots where
+\code{x}/\code{y} is the fitted value and the bar extends toward the observed
+value. Incompatible with \code{stat = "error"}. Default \code{FALSE}.}
+
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
 \item{show.legend}{Logical. Should this layer be included in the legends?}
@@ -68,7 +76,8 @@ and figures out orientation from the data. For asymmetric errors, use
 \item \code{error_neg} \strong{and} \code{error_pos} — asymmetric; the bar extends
 \code{error_neg} in the negative direction and \code{error_pos} in the positive
 direction along the non-categorical axis. For a one-sided bar, set
-the unused side to \code{0} explicitly.
+the unused side to \code{NA} — the cap, stem, and shared-bound cap on
+that side are all suppressed.
 }
 
 Mixing \code{error} with \code{error_neg} / \code{error_pos} is an error, as is
