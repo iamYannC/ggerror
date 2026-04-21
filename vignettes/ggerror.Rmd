@@ -43,18 +43,18 @@ directly.
 set.seed(1)
 mt <- mtcars[sample(nrow(mtcars), 5), ]
 mt$rn <- rownames(mt)
-
-base_theme <- theme_minimal() + theme(
+```
+```{r ggplot2-settings}
+set_theme(
+  theme_minimal() + theme(
   plot.title = element_text(hjust = 0, family = "consolas", size = 12),
   axis.title = element_blank()
-)
-
+))
+p <- ggplot(mt, aes(mpg, rn)) +
+  geom_point()
 ```
 
 ```{r base-plot}
-p <- ggplot(mt, aes(mpg, rn)) +
-  geom_point() + base_theme
-
 p + geom_error(aes(error = drat))
 ```
 
