@@ -37,7 +37,6 @@ It creates a overhead and a cluncky DX.
 Everything in this vignette uses `mtcars`, so you can copy the examples
 directly.
 
-## Symmetric errors
 
 ```{r demo-data}
 set.seed(1)
@@ -53,7 +52,7 @@ set_theme(
 p <- ggplot(mt, aes(mpg, rn)) +
   geom_point()
 ```
-
+## Symmetric errors
 ```{r base-plot}
 p + geom_error(aes(error = drat))
 ```
