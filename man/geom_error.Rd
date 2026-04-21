@@ -42,7 +42,7 @@ to \code{"identity"}.}
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{error_geom}{One of \code{"errorbar"} (default), \code{"linerange"},
-\code{"crossbar"}, or \code{"pointrange"}. Chooses which ggplot2 range geom
+\code{"crossbar"}, or \code{"pointrange"}. Chooses which ggplot2 error geom
 \code{geom_error()} dispatches to under the hood.}
 
 \item{orientation}{Either \code{NA} (the default; inferred from the data),
@@ -68,12 +68,16 @@ A thin wrapper around \code{\link[ggplot2:geom_linerange]{ggplot2::geom_errorbar
 and figures out orientation from the data. For asymmetric errors, use
 \code{error_neg} + \code{error_pos} instead of \code{error}.
 }
-\section{Niche parameters (via \code{...})}{
+\section{Package options}{
 
+Session-level knobs for the \code{0 -> NA} migration. Set via \code{\link[=options]{options()}}:
 \itemize{
-\item \code{zero_threshold} — numeric tolerance (default \code{1e-8}) for the
-uniformly-zero check that drives the \code{0 -> NA} deprecation.
-\item \code{silent_zero_warning} — \code{TRUE} suppresses that deprecation.
+\item \code{ggerror.silent_zero_warning} — \code{TRUE} suppresses the soft
+deprecation fired when \code{error_neg} or \code{error_pos} is set to \code{0} (You are encouraged to set it to \code{NA}).
+Default \code{FALSE}.
+\item \code{ggerror.zero_threshold} — Numeric absolute tolerance for zero-value detection.
+Values with a magnitude below this threshold are treated as exactly zero,
+triggering the warning. Defaults to \code{1e-8}.
 }
 }
 

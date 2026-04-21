@@ -141,7 +141,7 @@ check_error_aes_combination <- function(data) {
       c(
         "{.field {provided}} was supplied without {.field {missing_}}.",
         i = "For symmetric errors, use {.field error} instead.",
-        i = "For a one-sided bar, set {.field {missing_}} to {.val {0}} explicitly."
+        i = "For a one-sided bar, set {.field {missing_}} to {.code NA} explicitly."
       ),
       class = "ggerror_error_incomplete_asym_error_aes"
     )
@@ -204,9 +204,11 @@ check_na_in_symmetric_error <- function(data) {
 
 #' @keywords internal
 #' @noRd
-check_deprecated_zero_side <- function(data, zero_threshold = 1e-8,
-                                       silent_zero_warning = FALSE) {
-  if (isTRUE(silent_zero_warning)) return(invisible(data))
+check_deprecated_zero_side <- function(data) {
+  if (isTRUE(getOption("ggerror.silent_zero_warning", FALSE))) {
+    return(invisible(data))
+  }
+  zero_threshold <- getOption("ggerror.zero_threshold", 1e-8)
 
   for (nm in c("error_neg", "error_pos")) {
     if (!nm %in% names(data)) next
@@ -224,8 +226,9 @@ check_deprecated_zero_side <- function(data, zero_threshold = 1e-8,
             "Replace the zero column with `NA`: aes(%s = NA, %s = ...).",
             nm, opposite
           ),
-          i = "Silence this warning with `silent_zero_warning = TRUE`, \\
-               or tune with `zero_threshold`."
+          i = "Silence with \\
+               {.code options(ggerror.silent_zero_warning = TRUE)}, \\
+               or tune with {.code options(ggerror.zero_threshold = ...)}."
         )
       )
     }

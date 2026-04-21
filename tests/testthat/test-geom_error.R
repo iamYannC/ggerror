@@ -180,22 +180,6 @@ test_that("asymmetric error computes xmin/xmax on discrete y", {
   expect_identical(ld$xmax, ld$x + c(0.4, 0.5, 0.6))
 })
 
-test_that("one-sided bar (error_neg = 0) renders only the positive side", {
-  p <- ggplot2::ggplot(
-    data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
-               hi = c(0.4, 0.5, 0.6)),
-    ggplot2::aes(x, y)
-  ) +
-    geom_error(ggplot2::aes(error_neg = 0, error_pos = hi),
-               silent_zero_warning = TRUE)
-
-  built <- ggplot2::ggplot_build(p)
-  ld <- built$data[[1]]
-
-  expect_identical(ld$ymin, ld$y)
-  expect_identical(ld$ymax, ld$y + c(0.4, 0.5, 0.6))
-})
-
 test_that("combining error with error_pos raises a classed condition", {
   p <- ggplot2::ggplot(
     data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
@@ -227,6 +211,40 @@ test_that("only one of error_neg / error_pos raises a classed condition", {
     ggplot2::ggplot_build(p_neg_only),
     class = "ggerror_error_incomplete_asym_error_aes"
   )
+})
+
+test_that("incomplete-asym hint suggests NA rather than 0", {
+  dat <- data.frame(x = c("a", "b", "c"), y = c(1, 2, 3),
+                    hi = c(0.4, 0.5, 0.6))
+  p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+    geom_error(ggplot2::aes(error_pos = hi))
+  err  <- tryCatch(ggplot2::ggplot_build(p), error = identity)
+  # ggplot2 wraps our cli_abort; walk down to the underlying cli message.
+  cnd  <- err
+  while (!is.null(cnd$parent)) cnd <- cnd$parent
+  msg  <- paste(rlang::cnd_message(cnd, inherit = TRUE), collapse = "\n")
+  expect_match(msg, "NA")
+  expect_no_match(msg, "`0`|to 0")
+})
+
+test_that("aes(error_pos = NA, error_neg = drat) renders horizontal one-sided", {
+  # Regression: with discrete y (flipped_aes = TRUE), NA bounds live in
+  # xmin/xmax. The fast path used to only check ymin/ymax and silently
+  # dropped NA rows, which wiped the opposite-side stem.
+  dat <- data.frame(rn = letters[1:4], mpg = c(15, 18, 21, 24),
+                    drat = c(0.3, 0.4, 0.5, 0.6))
+  p <- ggplot2::ggplot(dat, ggplot2::aes(mpg, rn)) +
+    geom_error(ggplot2::aes(error_pos = NA, error_neg = drat))
+  # Build + draw exercises the per-side path; no error = success.
+  expect_no_error(ggplot2::ggplot_gtable(ggplot2::ggplot_build(p)))
+})
+
+test_that("aes(error_neg = NA, error_pos = drat) renders vertical one-sided", {
+  dat <- data.frame(cat = letters[1:4], val = c(15, 18, 21, 24),
+                    drat = c(0.3, 0.4, 0.5, 0.6))
+  p <- ggplot2::ggplot(dat, ggplot2::aes(cat, val)) +
+    geom_error(ggplot2::aes(error_neg = NA, error_pos = drat))
+  expect_no_error(ggplot2::ggplot_gtable(ggplot2::ggplot_build(p)))
 })
 
 test_that("negative values in error_neg / error_pos are rejected", {
@@ -281,6 +299,7 @@ test_that("per-side colours render as distinct negative and positive halves", {
 
 test_that("per-side width suppresses the shared-bound cap on horizontal bars", {
   skip_if_not_installed("vdiffr")
+  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
 
   dat <- mtcars
   dat$rn <- rownames(mtcars)
@@ -289,8 +308,7 @@ test_that("per-side width suppresses the shared-bound cap on horizontal bars", {
     ggplot2::geom_point() +
     geom_error(
       ggplot2::aes(error_neg = 0, error_pos = drat),
-      width_neg = 0,
-      silent_zero_warning = TRUE
+      width_neg = 0
     )
 
   vdiffr::expect_doppelganger("one-sided-width-neg-horizontal", p)
@@ -298,13 +316,13 @@ test_that("per-side width suppresses the shared-bound cap on horizontal bars", {
 
 test_that("per-side width suppresses the shared-bound cap on vertical bars", {
   skip_if_not_installed("vdiffr")
+  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
 
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
     ggplot2::geom_point() +
     geom_error(
       ggplot2::aes(error_neg = 0, error_pos = drat),
-      width_neg = 0,
-      silent_zero_warning = TRUE
+      width_neg = 0
     )
 
   vdiffr::expect_doppelganger("one-sided-width-neg-vertical", p)
@@ -315,11 +333,11 @@ test_that("width_neg does not leak to the positive side via partial matching", {
   # `params$width` used to silently resolve to `params$width_neg` and collapse
   # xmin/xmax to x for every row. Only `width_neg` is set here; xmax - xmin
   # must still be the default full width on the positive side.
+  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
     geom_error(
       ggplot2::aes(error_neg = 0, error_pos = drat),
-      width_neg = 0,
-      silent_zero_warning = TRUE
+      width_neg = 0
     )
 
   built <- ggplot2::ggplot_build(p)

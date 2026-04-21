@@ -9,9 +9,9 @@
   Enables one-layer `lm()` residual plots.
 * `aes(error_neg = NA, error_pos = ...)` is now the canonical idiom for
   one-sided bars — the cap and stem on the NA side auto-suppress. Passing
-  `0` still renders but emits a soft deprecation warning; opt out with
-  `silent_zero_warning = TRUE` or tune the detection threshold via
-  `zero_threshold`.
+  `0` still renders but emits a soft deprecation warning; silence with
+  `options(ggerror.silent_zero_warning = TRUE)` or tune the detection
+  threshold via `options(ggerror.zero_threshold = ...)`.
 * New diagnostics: NA values in symmetric `error` now warn with row
   indices (class `ggerror_warn_error_na`); negative values without
   `sign_aware` abort with row indices and a migration suggestion (class

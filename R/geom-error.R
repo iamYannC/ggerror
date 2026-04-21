@@ -13,14 +13,19 @@
 #' @param position Position adjustment.
 #' @param ... Other arguments passed on to [ggplot2::layer()].
 #' @param error_geom One of `"errorbar"` (default), `"linerange"`,
-#'   `"crossbar"`, or `"pointrange"`. Chooses which ggplot2 range geom
+#'   `"crossbar"`, or `"pointrange"`. Chooses which ggplot2 error geom
 #'   `geom_error()` dispatches to under the hood.
 #' @param orientation Either `NA` (the default; inferred from the data),
 #'   `"x"` (vertical error), or `"y"` (horizontal error).
-#' @section Niche parameters (via `...`):
-#' - `zero_threshold` — numeric tolerance (default `1e-8`) for the
-#'   uniformly-zero check that drives the `0 -> NA` deprecation.
-#' - `silent_zero_warning` — `TRUE` suppresses that deprecation.
+#'
+#' @section Package options:
+#' Session-level knobs for the `0 -> NA` migration. Set via [options()]:
+#' - `ggerror.silent_zero_warning` — `TRUE` suppresses the soft
+#'   deprecation fired when `error_neg` or `error_pos` is set to `0` (You are encouraged to set it to `NA`).
+#'   Default `FALSE`.
+#' - `ggerror.zero_threshold` — Numeric absolute tolerance for zero-value detection.
+#'    Values with a magnitude below this threshold are treated as exactly zero,
+#'    triggering the warning. Defaults to `1e-8`.
 #'
 #' @param sign_aware If `TRUE`, signed values in `error` are routed per
 #'   row: positive values extend the bar in the positive direction,
@@ -210,7 +215,6 @@ GeomError <- ggplot2::ggproto(
 
   extra_params = c(
     "na.rm", "error_geom", "orientation", "sign_aware",
-    "zero_threshold", "silent_zero_warning",
     per_side_param_names
   ),
 
@@ -232,11 +236,7 @@ GeomError <- ggplot2::ggproto(
       }
     }
 
-    check_deprecated_zero_side(
-      data,
-      zero_threshold      = params$zero_threshold      %||% 1e-8,
-      silent_zero_warning = params$silent_zero_warning %||% FALSE
-    )
+    check_deprecated_zero_side(data)
 
     # NA in symmetric `error` warns — the user likely meant to omit that row
     # entirely, or to pass `NA` through error_neg/error_pos for one-sided.
@@ -304,7 +304,11 @@ GeomError <- ggplot2::ggproto(
     )
 
     has_per_side <- any(!vapply(overrides, is.null, logical(1)))
-    has_na_side  <- any(is.na(data$ymin) | is.na(data$ymax))
+    # Error bounds live in ymin/ymax when flipped_aes = FALSE (vertical bars)
+    # and in xmin/xmax when TRUE (horizontal bars, discrete y). Check both so
+    # aes(error_neg = NA, ...) routes through the per-side path regardless.
+    has_na_side <- any(is.na(data$ymin) | is.na(data$ymax) |
+                       is.na(data$xmin) | is.na(data$xmax))
 
     if (!has_per_side && !has_na_side) {
       return(dispatch_error_geom(

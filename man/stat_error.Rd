@@ -14,6 +14,7 @@ stat_error(
   position = "identity",
   ...,
   fun = "mean_se",
+  fun.args = list(),
   error_geom = "errorbar",
   orientation = NA,
   na.rm = FALSE,
@@ -29,13 +30,19 @@ layer arguments.}
 \item{geom}{The geom to render the summary with. Defaults to
 \link{GeomErrorStat}, which reuses \code{geom_error()}'s draw path.}
 
-\item{...}{Additional parameters passed through to \code{\link[=geom_error]{geom_error()}}, e.g.
-per-side styling (\code{colour_neg}, \code{width_pos}, …).}
+\item{...}{Additional parameters. Names that match \code{fun}'s formals (or
+any name, when \code{fun} accepts \code{...}) are forwarded to \code{fun}; the
+remainder go to \code{\link[=geom_error]{geom_error()}} as per-side styling (\code{colour_neg},
+\code{width_pos}, …) or standard aesthetics.}
 
 \item{fun}{One of \code{"mean_se"} (default, uses \code{\link[ggplot2:mean_se]{ggplot2::mean_se()}}),
 \code{"mean_ci"} (mean with 95\% normal-theory CI via \code{\link[stats:TDist]{stats::qt()}}; no
 Hmisc dependency), or a function taking a numeric vector and returning
 a single-row data.frame with columns \code{y}, \code{ymin}, \code{ymax}.}
+
+\item{fun.args}{Named list of extra arguments to pass to \code{fun}. Merged
+with any \code{...} arguments whose names match \code{fun}'s formals; \code{fun.args}
+wins on collision.}
 
 \item{error_geom}{One of \code{"errorbar"} (default), \code{"linerange"},
 \code{"crossbar"}, \code{"pointrange"}.}

@@ -65,14 +65,34 @@ test_that("stat_error(conf.int = 0.9) narrows the CI on mean_ci", {
   expect_true(all(at_90$ymax - at_90$ymin < at_95$ymax - at_95$ymin))
 })
 
-test_that("stat_error(conf.int = ...) is harmless for mean_se", {
+test_that("stat_error(conf.int = ..., fun = 'mean_se') warns and still builds", {
   dat <- data.frame(
     x = factor(rep(letters[1:3], each = 10)),
     y = rnorm(30)
   )
-  p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
-    stat_error(conf.int = 0.8)
+  p <- suppressWarnings(
+    ggplot2::ggplot(dat, ggplot2::aes(x, y)) + stat_error(conf.int = 0.8)
+  )
+  # Build succeeds even though conf.int was effectively ignored.
   expect_no_error(ggplot2::ggplot_build(p))
+})
+
+test_that("explicit conf.int with fun = 'mean_se' fires a classed warning", {
+  expect_warning(
+    stat_error(conf.int = 0.9),
+    class = "ggerror_warn_conf_int_ignored"
+  )
+})
+
+test_that("explicit conf.int with fun = 'mean_ci' does not warn", {
+  expect_no_warning(stat_error(fun = "mean_ci", conf.int = 0.9))
+})
+
+test_that("explicit conf.int with a custom fun does not warn", {
+  my_fn <- function(y, conf.int = 0.95) {
+    data.frame(y = mean(y), ymin = conf.int, ymax = conf.int)
+  }
+  expect_no_warning(stat_error(fun = my_fn, conf.int = 0.9))
 })
 
 test_that("stat_error forwards conf.int to a custom fun that declares it", {
@@ -138,6 +158,59 @@ test_that("stat_error accepts a custom fun.data-style function", {
   expect_equal(sort(ld$y),    sort(ref$y),    tolerance = 1e-10)
   expect_equal(sort(ld$ymin), sort(ref$ymin), tolerance = 1e-10)
   expect_equal(sort(ld$ymax), sort(ref$ymax), tolerance = 1e-10)
+})
+
+test_that("stat_error forwards ... args matching custom fun's formals", {
+  iqr_fun <- function(y, type = 7) {
+    data.frame(
+      y    = median(y),
+      ymin = stats::quantile(y, 0.25, type = type, names = FALSE),
+      ymax = stats::quantile(y, 0.75, type = type, names = FALSE)
+    )
+  }
+  set.seed(7)
+  dat <- data.frame(
+    x = factor(rep(letters[1:3], each = 10)),
+    y = rnorm(30)
+  )
+  build <- function(type) {
+    p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+      stat_error(fun = iqr_fun, type = type)
+    ggplot2::ggplot_build(p)$data[[1]]
+  }
+  ld1 <- build(1)
+  ld7 <- build(7)
+  # Different quantile types should produce different bounds.
+  expect_false(isTRUE(all.equal(sort(ld1$ymin), sort(ld7$ymin))))
+
+  ref <- do.call(rbind, lapply(split(dat$y, dat$x), iqr_fun, type = 2))
+  ld2 <- build(2)
+  expect_equal(sort(ld2$ymin), sort(ref$ymin), tolerance = 1e-10)
+})
+
+test_that("stat_error(fun.args = ...) wins over auto-routed ... on collision", {
+  fn <- function(y, k = 1) {
+    data.frame(y = mean(y), ymin = mean(y) - k, ymax = mean(y) + k)
+  }
+  dat <- data.frame(x = factor(rep("a", 5)), y = rnorm(5))
+  p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+    stat_error(fun = fn, k = 1, fun.args = list(k = 99))
+  ld <- ggplot2::ggplot_build(p)$data[[1]]
+  expect_equal(ld$ymax - ld$y, 99, tolerance = 1e-10)
+})
+
+test_that("stat_error doesn't warn about geom-bound ... args", {
+  iqr_fun <- function(y, type = 7) {
+    data.frame(
+      y    = median(y),
+      ymin = stats::quantile(y, 0.25, type = type, names = FALSE),
+      ymax = stats::quantile(y, 0.75, type = type, names = FALSE)
+    )
+  }
+  dat <- data.frame(x = factor(rep("a", 10)), y = rnorm(10))
+  p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
+    stat_error(fun = iqr_fun, type = 2, colour_neg = "red")
+  expect_no_warning(ggplot2::ggplot_build(p))
 })
 
 # ---- dual entry points ----------------------------------------------------
@@ -211,4 +284,46 @@ test_that("stat_error summarises along the numeric axis when y is discrete", {
   p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) + stat_error()
   ld <- ggplot2::ggplot_build(p)$data[[1]]
   expect_true(all(c("xmin", "xmax") %in% names(ld)))
+})
+
+# ---- default-value info messages ------------------------------------------
+
+test_that("stat_error emits a classed info message when fun is defaulted", {
+  expect_message(
+    stat_error(),
+    class = "ggerror_message_defaults"
+  )
+})
+
+test_that("stat_error mentions conf.int when mean_ci uses the default", {
+  expect_message(
+    stat_error(fun = "mean_ci"),
+    regexp  = "conf\\.int = 0\\.95",
+    class   = "ggerror_message_defaults"
+  )
+})
+
+test_that("stat_error stays silent when both fun and conf.int are explicit", {
+  expect_no_message(stat_error(fun = "mean_ci", conf.int = 0.9))
+})
+
+# ---- size-1 group error ---------------------------------------------------
+
+test_that("stat_error raises a classed error when any group has < 2 obs", {
+  # mtcars$rn is unique per row, so every group has exactly 1 observation.
+  dat <- data.frame(rn = rownames(mtcars), mpg = mtcars$mpg)
+  p   <- ggplot2::ggplot(dat, ggplot2::aes(rn, mpg)) + stat_error()
+  expect_error(
+    ggplot2::ggplot_build(p),
+    class = "ggerror_error_too_few_obs"
+  )
+})
+
+test_that("stat_error accepts groups that all have >= 2 obs", {
+  dat <- data.frame(
+    cat = factor(rep(letters[1:3], each = 2)),
+    val = c(1, 2, 3, 4, 5, 6)
+  )
+  p   <- ggplot2::ggplot(dat, ggplot2::aes(cat, val)) + stat_error()
+  expect_no_error(ggplot2::ggplot_build(p))
 })
