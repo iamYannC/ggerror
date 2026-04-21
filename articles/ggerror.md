@@ -16,8 +16,6 @@ error-focused API.
 Everything in this vignette uses `mtcars`, so you can copy the examples
 directly.
 
-## Symmetric errors
-
 ``` r
 set.seed(1)
 mt <- mtcars[sample(nrow(mtcars), 5), ]
@@ -33,6 +31,8 @@ set_theme(
 p <- ggplot(mt, aes(mpg, rn)) +
   geom_point()
 ```
+
+## Symmetric errors
 
 ``` r
 p + geom_error(aes(error = drat))
