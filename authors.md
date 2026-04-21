@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/iamYannC/ggerror/blob/v1.0.0/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/iamYannC/ggerror/blob/main/DESCRIPTION)
 
 Cohen Y (2026). *ggerror: Extended Error Geoms for 'ggplot2'*. R package
 version 1.0.0, <https://github.com/iamYannC/ggerror>.

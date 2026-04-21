@@ -28,7 +28,7 @@ p + geom_error(aes(error = drat))
 p + geom_error_pointrange(aes(error_neg = drat / 2, error_pos = drat, linetype_neg = "dashed"))
 
 # One-sided error bars, using the error_geom argument
-p + geom_error(error_geom = "linerange", aes(error_neg = 0, error_pos = drat), width_neg = 0)
+p + geom_error(error_geom = "linerange", aes(error_neg = NA, error_pos = drat))
 ```
 
 #### Symmetric error bars
@@ -53,16 +53,6 @@ styling, see
 | `geom_linerange`  | `"linerange"`                  | [`geom_error_linerange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)  |
 | `geom_pointrange` | `"pointrange"`                 | [`geom_error_pointrange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md) |
 | `geom_crossbar`   | `"crossbar"`                   | [`geom_error_crossbar()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)   |
-
-### What’s next
-
-I received some feedback and plan on implementing two new features: -
-`stat_error` for computing error bars based on raw vectors -
-`sign_aware` argument to `geom_error` to draw bidrectional error bars
-based on a single `error` aesthetic. It is impossible in current 0.4.0
-(negative values raise an error).
-
-### See [Issue \#1: v1.0.0 major updates](https://github.com/iamyannc/ggerror/issues/1) for more details
 
 ### Disclaimer
 
