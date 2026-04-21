@@ -127,27 +127,13 @@ under the hood <code><a href="https://ggplot2.tidyverse.org/reference/geom_liner
 functional programming approach by using the <code>error_geom</code>
 argument with <code><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">purrr::map()</a></code>.</p>
 </div>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">supported_geoms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'errorbar'</span>, <span class="st">'crossbar'</span>, <span class="st">'linerange'</span>, <span class="st">'pointrange'</span><span class="op">)</span></span>
-<span><span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="va">supported_geoms</span>, \<span class="op">(</span><span class="va">err</span><span class="op">)</span> <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_error.html">geom_error</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>error <span class="op">=</span> <span class="va">drat</span><span class="op">)</span>, error_geom <span class="op">=</span> <span class="va">err</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">## [[1]]</span></span></code></pre></div>
-<p><img src="ggerror_files/figure-html/functional-example-1.png" class="r-plt" alt="" width="576"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[2]]</span></span></code></pre>
-<p><img src="ggerror_files/figure-html/functional-example-2.png" class="r-plt" alt="" width="576"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[3]]</span></span></code></pre>
-<p><img src="ggerror_files/figure-html/functional-example-3.png" class="r-plt" alt="" width="576"></p>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## [[4]]</span></span></code></pre>
-<p><img src="ggerror_files/figure-html/functional-example-4.png" class="r-plt" alt="" width="576"></p>
 </div>
 <div class="section level2">
 <h2 id="asymmetric-errors">Asymmetric errors<a class="anchor" aria-label="anchor" href="#asymmetric-errors"></a>
 </h2>
 <p>Use <code>error_neg</code> and <code>error_pos</code> when the
 negative and positive extents differ.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_error.html">geom_error</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>    error_neg <span class="op">=</span> <span class="va">drat</span> <span class="op">/</span> <span class="fl">2</span>,</span>
 <span>    error_pos <span class="op">=</span> <span class="va">drat</span><span class="op">)</span></span>
@@ -167,7 +153,7 @@ plot.</p>
 <p>Set the unused side to <code>NA</code> for a genuine one-sided error
 bar — <code>ggerror</code> auto-suppresses the cap and stem on that
 side.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_error.html">geom_error</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>    error_neg <span class="op">=</span> <span class="cn">NA</span>,</span>
@@ -186,7 +172,7 @@ also need <code>width_neg = 0</code> to hide the shared cap.
 separately with fixed <code>_neg</code> and <code>_pos</code> parameters
 for <code>colour</code>, <code>fill</code>, <code>linewidth</code>,
 <code>linetype</code>, <code>alpha</code>, and <code>width</code>.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_error.html">geom_error</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>    error_neg <span class="op">=</span> <span class="va">drat</span> <span class="op">/</span> <span class="fl">2</span>,</span>
@@ -197,7 +183,7 @@ for <code>colour</code>, <code>fill</code>, <code>linewidth</code>,
 <span>    linewidth <span class="op">=</span> <span class="fl">2</span> <span class="co"># you can still control both sides of the error bar</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 <p><img src="ggerror_files/figure-html/asymmetric-styled-1.png" class="r-plt" alt="" width="576"></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_error.html">geom_error</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>    error_neg <span class="op">=</span> <span class="va">drat</span> <span class="op">/</span> <span class="fl">2</span>,</span>

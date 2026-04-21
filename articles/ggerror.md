@@ -71,29 +71,6 @@ Supported values for `error_geom` are `"errorbar"`, `"linerange"`,
 for a functional programming approach by using the `error_geom` argument
 with [`purrr::map()`](https://purrr.tidyverse.org/reference/map.html).
 
-``` r
-supported_geoms <- c('errorbar', 'crossbar', 'linerange', 'pointrange')
-purrr::map(supported_geoms, \(err) p + geom_error(aes(error = drat), error_geom = err))
-## [[1]]
-```
-
-![](ggerror_files/figure-html/functional-example-1.png)
-
-    ## 
-    ## [[2]]
-
-![](ggerror_files/figure-html/functional-example-2.png)
-
-    ## 
-    ## [[3]]
-
-![](ggerror_files/figure-html/functional-example-3.png)
-
-    ## 
-    ## [[4]]
-
-![](ggerror_files/figure-html/functional-example-4.png)
-
 ## Asymmetric errors
 
 Use `error_neg` and `error_pos` when the negative and positive extents
