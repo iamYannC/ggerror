@@ -17,6 +17,7 @@ geom_error(
   ...,
   error_geom = "errorbar",
   orientation = NA,
+  sign_aware = FALSE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -41,11 +42,18 @@ to \code{"identity"}.}
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{error_geom}{One of \code{"errorbar"} (default), \code{"linerange"},
-\code{"crossbar"}, or \code{"pointrange"}. Chooses which ggplot2 range geom
+\code{"crossbar"}, or \code{"pointrange"}. Chooses which ggplot2 error geom
 \code{geom_error()} dispatches to under the hood.}
 
 \item{orientation}{Either \code{NA} (the default; inferred from the data),
 \code{"x"} (vertical error), or \code{"y"} (horizontal error).}
+
+\item{sign_aware}{If \code{TRUE}, signed values in \code{error} are routed per
+row: positive values extend the bar in the positive direction,
+negative values extend it in the negative direction, and the
+opposite side is suppressed. Useful for residual plots where
+\code{x}/\code{y} is the fitted value and the bar extends toward the observed
+value. Incompatible with \code{stat = "error"}. Default \code{FALSE}.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
@@ -60,6 +68,19 @@ A thin wrapper around \code{\link[ggplot2:geom_linerange]{ggplot2::geom_errorbar
 and figures out orientation from the data. For asymmetric errors, use
 \code{error_neg} + \code{error_pos} instead of \code{error}.
 }
+\section{Package options}{
+
+Session-level knobs for the \code{0 -> NA} migration. Set via \code{\link[=options]{options()}}:
+\itemize{
+\item \code{ggerror.silent_zero_warning} — \code{TRUE} suppresses the soft
+deprecation fired when \code{error_neg} or \code{error_pos} is set to \code{0} (You are encouraged to set it to \code{NA}).
+Default \code{FALSE}.
+\item \code{ggerror.zero_threshold} — Numeric absolute tolerance for zero-value detection.
+Values with a magnitude below this threshold are treated as exactly zero,
+triggering the warning. Defaults to \code{1e-8}.
+}
+}
+
 \section{Aesthetics}{
 
 \code{geom_error()} requires \code{x}, \code{y}, and one of:
@@ -68,7 +89,8 @@ and figures out orientation from the data. For asymmetric errors, use
 \item \code{error_neg} \strong{and} \code{error_pos} — asymmetric; the bar extends
 \code{error_neg} in the negative direction and \code{error_pos} in the positive
 direction along the non-categorical axis. For a one-sided bar, set
-the unused side to \code{0} explicitly.
+the unused side to \code{NA} — the cap, stem, and shared-bound cap on
+that side are all suppressed.
 }
 
 Mixing \code{error} with \code{error_neg} / \code{error_pos} is an error, as is
@@ -92,12 +114,28 @@ ggplot(mtcars, aes(factor(cyl), mpg)) +
   geom_error(aes(error = drat), error_geom = "pointrange")
 
 # Asymmetric: bar extends drat/2 below and drat above each point
-ggplot(mtcars, aes(factor(cyl), mpg)) +
+ggplot(mtcars, aes(mpg, rownames(mtcars))) +
   geom_point() +
   geom_error(aes(error_neg = drat / 2, error_pos = drat))
 
-# Style the negative and positive halves separately
+# One-sided: set the unused side to NA (cap + stem auto-suppressed)
+ggplot(mtcars, aes(mpg, rownames(mtcars))) +
+  geom_point() +
+  geom_error(aes(error_neg = NA, error_pos = drat))
+
+# Summarise raw data: mean +/- SE per group (see also stat_error())
 ggplot(mtcars, aes(factor(cyl), mpg)) +
+  geom_error(stat = "error", error_geom = "pointrange")
+
+# Signed residual plot: bar extends from fitted toward observed
+model <- lm(mpg ~ wt, data = mtcars)
+ggplot(mtcars, aes(fitted(model), mpg)) +
+  geom_point() +
+  geom_error(aes(error = resid(model)),
+             sign_aware = TRUE, orientation = "x")
+
+# Style the negative and positive halves separately
+ggplot(mtcars, aes(mpg, rownames(mtcars))) +
   geom_point() +
   geom_error(
     aes(error_neg = drat / 2, error_pos = drat),

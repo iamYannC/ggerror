@@ -40,6 +40,21 @@ check_orientation <- function(orientation, call = rlang::caller_env()) {
 
 #' @keywords internal
 #' @noRd
+check_conf_int <- function(conf.int, call = rlang::caller_env()) {
+  if (!is.numeric(conf.int) || length(conf.int) != 1L ||
+      is.na(conf.int) || conf.int <= 0 || conf.int >= 1) {
+    cli::cli_abort(
+      "{.arg conf.int} must be a single number strictly between 0 and 1, \\
+       not {.val {conf.int}}.",
+      class = "ggerror_error_bad_conf_int",
+      call  = call
+    )
+  }
+  invisible(conf.int)
+}
+
+#' @keywords internal
+#' @noRd
 check_pinned_error_geom <- function(is_missing, fn, type,
                                     call = rlang::caller_env()) {
   if (is_missing) {
@@ -126,7 +141,7 @@ check_error_aes_combination <- function(data) {
       c(
         "{.field {provided}} was supplied without {.field {missing_}}.",
         i = "For symmetric errors, use {.field error} instead.",
-        i = "For a one-sided bar, set {.field {missing_}} to {.val {0}} explicitly."
+        i = "For a one-sided bar, set {.field {missing_}} to {.code NA} explicitly."
       ),
       class = "ggerror_error_incomplete_asym_error_aes"
     )
@@ -145,17 +160,80 @@ check_nonneg_aes <- function(values, aes_name) {
       class = "ggerror_error_bad_error_aes"
     )
   }
-  neg <- !is.na(values) & values < 0
-  if (any(neg)) {
+  neg <- which(!is.na(values) & values < 0)
+  if (length(neg)) {
+    shown  <- utils::head(neg, 5)
+    more   <- length(neg) - length(shown)
+    suffix <- if (more > 0) sprintf(" (+ %d more)", more) else ""
     cli::cli_abort(
       c(
         "{.field {aes_name}} aesthetic must be non-negative.",
-        i = "Found {sum(neg)} negative value{?s}."
+        i = "Found {length(neg)} {cli::qty(length(neg))}negative value{?s}.",
+        i = "{cli::qty(length(shown))}Row{?s}: {.val {shown}}{suffix}.",
+        i = "Pass {.code sign_aware = TRUE} to route signed values, \\
+             or wrap with {.fn abs}."
       ),
       class = "ggerror_error_negative_error_aes"
     )
   }
   invisible(values)
+}
+
+#' @keywords internal
+#' @noRd
+check_na_in_symmetric_error <- function(data) {
+  if (!"error" %in% names(data)) return(invisible(data))
+  na_rows <- which(is.na(data$error))
+  if (!length(na_rows)) return(invisible(data))
+
+  shown  <- utils::head(na_rows, 5)
+  more   <- length(na_rows) - length(shown)
+  suffix <- if (more > 0) sprintf(" (+ %d more)", more) else ""
+  cli::cli_warn(
+    c(
+      "{.field error} aesthetic contains {length(na_rows)} \\
+       {cli::qty(length(na_rows))} {.val NA} value{?s}.",
+      i = "{cli::qty(length(shown))} Row{?s}: {.val {shown}}{suffix}.",
+      i = "NA rows render no bar. For explicit one-sided bars use \\
+           {.field error_neg} / {.field error_pos} with {.val NA}."
+    ),
+    class = "ggerror_warn_error_na"
+  )
+  invisible(data)
+}
+
+#' @keywords internal
+#' @noRd
+check_deprecated_zero_side <- function(data) {
+  if (isTRUE(getOption("ggerror.silent_zero_warning", FALSE))) {
+    return(invisible(data))
+  }
+  zero_threshold <- getOption("ggerror.zero_threshold", 1e-8)
+
+  for (nm in c("error_neg", "error_pos")) {
+    if (!nm %in% names(data)) next
+    v <- data[[nm]]
+    v <- v[!is.na(v)]
+    if (!length(v)) next
+    if (all(abs(v) <= zero_threshold)) {
+      opposite <- if (nm == "error_neg") "error_pos" else "error_neg"
+      lifecycle::deprecate_warn(
+        when = "1.0.0",
+        what = I(sprintf("Using `0` in %s to signal a one-sided bar", nm)),
+        with = I(sprintf("`NA` in aes(%s)", nm)),
+        details = c(
+          i = sprintf(
+            "Replace the zero column with `NA`: aes(%s = NA, %s = ...).",
+            nm, opposite
+          ),
+          i = "Silence with \\
+               {.code options(ggerror.silent_zero_warning = TRUE)}, \\
+               or tune with {.code options(ggerror.zero_threshold = ...)}."
+        )
+      )
+    }
+  }
+  invisible(data)
 }
 
 #' @keywords internal

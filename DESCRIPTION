@@ -1,6 +1,6 @@
 Package: ggerror
 Title: Extended Error Geoms for 'ggplot2'
-Version: 0.4.0
+Version: 1.0.0
 Authors@R:
     person("Yann", "Cohen", , "yannco5@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0009-0509-3609"))
@@ -12,9 +12,10 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Imports: 
+Imports:
     cli,
     ggplot2 (>= 3.4.0),
+    lifecycle,
     rlang
 Suggests:
     knitr,
