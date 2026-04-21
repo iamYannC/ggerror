@@ -114,23 +114,22 @@ focused on displaying the data, rather than the mechanics of the plot.
 
 ## One-sided bars
 
-Setting one side to `0` gives you a one-sided error bar.
+Set the unused side to `NA` for a genuine one-sided error bar —
+`ggerror` auto-suppresses the cap and stem on that side.
 
 ``` r
 p +
   geom_error(aes(
-    error_neg = 0,
-    error_pos = drat),
-    width_neg = 0
-  )
+    error_neg = NA,
+    error_pos = drat
+  ))
 ```
 
 ![](ggerror_files/figure-html/one-sided-1.png)
 
-On its own, `aes(error_neg = 0, error_pos = drat)` still draws a cap at
-the observation value at the default width, because the negative side
-has zero length but inherits the shared cap width. Setting
-`width_neg = 0` removes that cap and gives you a genuine one-sided bar.
+Passing `0` instead of `NA` still works but is soft-deprecated since
+v1.0.0 — you’ll get a migration warning, and you’d also need
+`width_neg = 0` to hide the shared cap. `NA` is the cleaner idiom.
 
 ## More customization: per-side styling
 

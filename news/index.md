@@ -1,5 +1,31 @@
 # Changelog
 
+## ggerror 1.0.0
+
+- New
+  [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
+  summarises raw observation-level data into error bounds. Accepts
+  `fun = "mean_se"` (default), `"mean_ci"` (95% normal- theory CI, no
+  Hmisc dep), or a custom function following ggplot2’s `fun.data`
+  contract. Also available via `geom_error(stat = "error")`.
+- New `sign_aware = TRUE` routes signed per-row values (typically
+  residuals) into one-sided bars whose direction encodes the sign.
+  Enables one-layer [`lm()`](https://rdrr.io/r/stats/lm.html) residual
+  plots.
+- `aes(error_neg = NA, error_pos = ...)` is now the canonical idiom for
+  one-sided bars — the cap and stem on the NA side auto-suppress.
+  Passing `0` still renders but emits a soft deprecation warning;
+  silence with `options(ggerror.silent_zero_warning = TRUE)` or tune the
+  detection threshold via `options(ggerror.zero_threshold = ...)`.
+- New diagnostics: NA values in symmetric `error` now warn with row
+  indices (class `ggerror_warn_error_na`); negative values without
+  `sign_aware` abort with row indices and a migration suggestion (class
+  `ggerror_error_negative_error_aes`).
+- New vignette `lm-residuals` covering
+  [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
+  and `sign_aware` with an [`lm()`](https://rdrr.io/r/stats/lm.html)
+  residual-plot demo.
+
 ## ggerror 0.4.0
 
 - Added a pkgdown site at <https://iamyannc.github.io/ggerror/>.

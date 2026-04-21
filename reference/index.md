@@ -10,6 +10,16 @@ The main entry point and its pinned wrappers.
   [`geom_error_pointrange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)
   : Error bars with automatic orientation
 
+## Summarising raw data
+
+Compute error bounds from observation-level data.
+
+- [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
+  :
+
+  Summarising stat for
+  [`geom_error()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)
+
 ## Package
 
 - [`ggerror`](https://iamyannc.github.io/ggerror/reference/ggerror-package.md)

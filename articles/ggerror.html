@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ggerror</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,12 @@
       <ul class="navbar-nav me-auto">
 <li class="active nav-item"><a class="nav-link" href="../articles/ggerror.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/lm-residuals.html">Residual plots with stat_error() and sign_aware</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -158,21 +164,20 @@ plot.</p>
 <div class="section level2">
 <h2 id="one-sided-bars">One-sided bars<a class="anchor" aria-label="anchor" href="#one-sided-bars"></a>
 </h2>
-<p>Setting one side to <code>0</code> gives you a one-sided error
-bar.</p>
+<p>Set the unused side to <code>NA</code> for a genuine one-sided error
+bar — <code>ggerror</code> auto-suppresses the cap and stem on that
+side.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_error.html">geom_error</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
-<span>    error_neg <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>    error_pos <span class="op">=</span> <span class="va">drat</span><span class="op">)</span>,</span>
-<span>    width_neg <span class="op">=</span> <span class="fl">0</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span>    error_neg <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>    error_pos <span class="op">=</span> <span class="va">drat</span></span>
+<span>  <span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="ggerror_files/figure-html/one-sided-1.png" class="r-plt" alt="" width="576"></p>
-<p>On its own, <code>aes(error_neg = 0, error_pos = drat)</code> still
-draws a cap at the observation value at the default width, because the
-negative side has zero length but inherits the shared cap width. Setting
-<code>width_neg = 0</code> removes that cap and gives you a genuine
-one-sided bar.</p>
+<p>Passing <code>0</code> instead of <code>NA</code> still works but is
+soft-deprecated since v1.0.0 — you’ll get a migration warning, and you’d
+also need <code>width_neg = 0</code> to hide the shared cap.
+<code>NA</code> is the cleaner idiom.</p>
 </div>
 <div class="section level2">
 <h2 id="more-customization-per-side-styling">More customization: per-side styling<a class="anchor" aria-label="anchor" href="#more-customization-per-side-styling"></a>

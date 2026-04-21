@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ggerror</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,6 +17,10 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/ggerror.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/lm-residuals.html">Residual plots with stat_error() and sign_aware</a></li>
+  </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -32,6 +36,15 @@
       <small>Source: <a href="https://github.com/iamYannC/ggerror/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.0" id="ggerror-100">ggerror 1.0.0<a class="anchor" aria-label="anchor" href="#ggerror-100"></a></h2>
+<ul><li>New <code><a href="../reference/stat_error.html">stat_error()</a></code> summarises raw observation-level data into error bounds. Accepts <code>fun = "mean_se"</code> (default), <code>"mean_ci"</code> (95% normal- theory CI, no Hmisc dep), or a custom function following ggplot2’s <code>fun.data</code> contract. Also available via <code>geom_error(stat = "error")</code>.</li>
+<li>New <code>sign_aware = TRUE</code> routes signed per-row values (typically residuals) into one-sided bars whose direction encodes the sign. Enables one-layer <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> residual plots.</li>
+<li>
+<code>aes(error_neg = NA, error_pos = ...)</code> is now the canonical idiom for one-sided bars — the cap and stem on the NA side auto-suppress. Passing <code>0</code> still renders but emits a soft deprecation warning; silence with <code>options(ggerror.silent_zero_warning = TRUE)</code> or tune the detection threshold via <code>options(ggerror.zero_threshold = ...)</code>.</li>
+<li>New diagnostics: NA values in symmetric <code>error</code> now warn with row indices (class <code>ggerror_warn_error_na</code>); negative values without <code>sign_aware</code> abort with row indices and a migration suggestion (class <code>ggerror_error_negative_error_aes</code>).</li>
+<li>New vignette <code>lm-residuals</code> covering <code><a href="../reference/stat_error.html">stat_error()</a></code> and <code>sign_aware</code> with an <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> residual-plot demo.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="ggerror-040">ggerror 0.4.0<a class="anchor" aria-label="anchor" href="#ggerror-040"></a></h2>
 <ul><li>Added a pkgdown site at <a href="https://iamyannc.github.io/ggerror/" class="uri">https://iamyannc.github.io/ggerror/</a>.</li>
