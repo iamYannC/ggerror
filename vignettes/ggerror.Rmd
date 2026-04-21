@@ -37,7 +37,6 @@ It creates a overhead and a cluncky DX.
 Everything in this vignette uses `mtcars`, so you can copy the examples
 directly.
 
-
 ```{r demo-data}
 set.seed(1)
 mt <- mtcars[sample(nrow(mtcars), 5), ]
