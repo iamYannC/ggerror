@@ -56,6 +56,7 @@ ggplot(mtcars, aes(factor(cyl), mpg)) +
 ggplot(mtcars, aes(factor(cyl), mpg)) +
   stat_error(fun = "mean_ci", error_geom = "pointrange")
 ```
+
 *Both `mean_ci` and `mean_se` accept `na.rm` as an argument.*
 *`mean_ci` also accepts `conf.int`, default is 0.95.*
 
@@ -76,12 +77,14 @@ iqr <- function(y, type = 6) {
 ggplot(mtcars, aes(factor(cyl), mpg)) +
   stat_error(fun = iqr, type = 1)
 ```
+
 You can pass an arbitrary number of arguments to `stat_error()`.
 
 While `geom_error` uses `stat = 'identity'`, you could also pass `stat = 'error'`, which is equivalent to `stat_error()`.
 
 ## `sign_aware`: residuals as one-sided bars
 I really love this usecase. Drawing sign-aware errors (with colours!) used to be a pain. Not anymore!
+
 - **First, let us fit a (dummy) model**
 ```{r fit-model}
 model <- lm(mpg ~ wt, data = mtcars)
@@ -89,7 +92,7 @@ mt_model <- mtcars
 mt_model$predicted <- fitted(model) # predicted values (y_hat)
 mt_model$res <- resid(model) # raw distances (y-y_hat), some positive, some negative
 ```
-- **Use sign_aware and sided-colours viz model's errors**
+
 ```{r residuals-plot}
 ggplot(mt_model, aes(mpg,predicted)) +
   geom_point() +
@@ -97,4 +100,5 @@ ggplot(mt_model, aes(mpg,predicted)) +
   geom_error(aes(error = res), sign_aware = TRUE, orientation = "x",
              colour_pos = "firebrick", colour_neg = "steelblue")
 ```
+
 *Since both axes are numeric, `ggerror` can't infer the orientation itself, so we have to pass it
