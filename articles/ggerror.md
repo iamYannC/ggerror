@@ -22,17 +22,19 @@ directly.
 set.seed(1)
 mt <- mtcars[sample(nrow(mtcars), 5), ]
 mt$rn <- rownames(mt)
-
-base_theme <- theme_minimal() + theme(
-  plot.title = element_text(hjust = 0, family = "consolas", size = 12),
-  axis.title = element_blank()
-)
 ```
 
 ``` r
+set_theme(
+  theme_minimal() + theme(
+  plot.title = element_text(hjust = 0, family = "consolas", size = 12),
+  axis.title = element_blank()
+))
 p <- ggplot(mt, aes(mpg, rn)) +
-  geom_point() + base_theme
+  geom_point()
+```
 
+``` r
 p + geom_error(aes(error = drat))
 ```
 
