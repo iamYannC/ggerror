@@ -1,10 +1,10 @@
 ---
-title: "v1.0.0 features: stat_error() and sign_aware"
+title: "stat_error() and sign_aware + demo"
 output:
   rmarkdown::html_vignette:
     css: vignette.css
 vignette: >
-  %\VignetteIndexEntry{v1.0.0 features: stat_error() and sign_aware}
+  %\VignetteIndexEntry{stat_error() and sign_aware + demo}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

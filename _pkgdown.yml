@@ -3,8 +3,8 @@ template:
   bootstrap: 5
 
 reference:
-- title: "Creating error geoms"
-  desc: "The main entry point and its pinned wrappers."
+- title: "Error geoms"
+  desc: "The core `geom_error` and its variants."
   contents:
   - geom_error
   - geom_error_linerange
@@ -12,7 +12,7 @@ reference:
   - geom_error_pointrange
 
 - title: "Summarising raw data"
-  desc: "Compute error bounds from observation-level data."
+  desc: "Summarise statistics on the provided data."
   contents:
   - stat_error
 
