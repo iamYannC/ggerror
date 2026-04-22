@@ -1,4 +1,4 @@
-# Using ggerror
+# ggerror: The Basics
 
 ``` r
 library(ggplot2)

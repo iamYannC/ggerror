@@ -32,6 +32,8 @@
 
 ## ggerror 0.3.0
 
+CRAN release: 2026-04-21
+
 - `ggerror` now includes a complete aestetic support for one sided error
   bars.
 - Added fixed per-side styling parameters for error bars: `colour_neg` /

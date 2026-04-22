@@ -62,9 +62,9 @@ Ideas for new geoms are welcome.
 
 # Package index
 
-## Creating error geoms
+## Error geoms
 
-The main entry point and its pinned wrappers.
+The core `geom_error` and its variants.
 
 - [`geom_error()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)
   [`geom_error_linerange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)
@@ -74,7 +74,7 @@ The main entry point and its pinned wrappers.
 
 ## Summarising raw data
 
-Compute error bounds from observation-level data.
+Summarise statistics on the provided data.
 
 - [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
   :
@@ -92,7 +92,7 @@ Compute error bounds from observation-level data.
 
 ### Articles
 
-- [Using
-  ggerror](https://iamyannc.github.io/ggerror/articles/ggerror.md):
-- [v1.0.0 features: stat_error() and
-  sign_aware](https://iamyannc.github.io/ggerror/articles/v100ft.md):
+- [ggerror: The
+  Basics](https://iamyannc.github.io/ggerror/articles/ggerror.md):
+- [stat_error() and sign_aware +
+  demo](https://iamyannc.github.io/ggerror/articles/v100ft.md):

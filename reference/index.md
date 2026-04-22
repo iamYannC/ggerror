@@ -1,8 +1,8 @@
 # Package index
 
-## Creating error geoms
+## Error geoms
 
-The main entry point and its pinned wrappers.
+The core `geom_error` and its variants.
 
 - [`geom_error()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)
   [`geom_error_linerange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)
@@ -12,7 +12,7 @@ The main entry point and its pinned wrappers.
 
 ## Summarising raw data
 
-Compute error bounds from observation-level data.
+Summarise statistics on the provided data.
 
 - [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
   :
