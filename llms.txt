@@ -13,7 +13,9 @@ offer full customization options for per-side styling.
 ### Installation
 
 ``` r
-pak::pak('iamyannc/ggerror')
+
+install.packages("ggerror") # 0.3.0 
+pak::pak("iamyannc/ggerror") # 1.0.0 - better error messages & stat_error & sign_aware!
 
 library(ggplot2)
 library(ggerror)
