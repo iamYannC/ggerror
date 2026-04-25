@@ -38,7 +38,9 @@ test_that("non-zero side does not trigger deprecation", {
 })
 
 test_that("ggerror.silent_zero_warning option suppresses the deprecation", {
-  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
+  old_ops <- options(ggerror.silent_zero_warning = TRUE)
+  on.exit(options(old_ops), add = TRUE)
+  
   dat <- data.frame(x = 1:3, y = 10, en = 0, ep = 1:3)
   p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
     geom_error(ggplot2::aes(error_neg = en, error_pos = ep),
@@ -66,7 +68,9 @@ test_that("ggerror.zero_threshold governs what counts as zero", {
 })
 
 test_that("tightening ggerror.zero_threshold removes the warning", {
-  withr::local_options(list(ggerror.zero_threshold = 1e-12))
+  old_ops <- options(ggerror.zero_threshold = 1e-12)
+  on.exit(options(old_ops), add = TRUE)
+  
   dat <- data.frame(x = 1:3, y = 10, en = 1e-10, ep = 1:3)
   p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
     geom_error(ggplot2::aes(error_neg = en, error_pos = ep),
@@ -75,8 +79,10 @@ test_that("tightening ggerror.zero_threshold removes the warning", {
 })
 
 test_that("deprecated zero bar still renders (0 keeps working)", {
-  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
-  dat <- data.frame(x = 1:3, y = 10, en = 0, ep = 1:3)
+  old_ops <- options(ggerror.silent_zero_warning = TRUE)
+  on.exit(options(old_ops), add = TRUE)
+  
+    dat <- data.frame(x = 1:3, y = 10, en = 0, ep = 1:3)
   p <- ggplot2::ggplot(dat, ggplot2::aes(x, y)) +
     geom_error(ggplot2::aes(error_neg = en, error_pos = ep),
                orientation = "x")

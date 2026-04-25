@@ -299,8 +299,9 @@ test_that("per-side colours render as distinct negative and positive halves", {
 
 test_that("per-side width suppresses the shared-bound cap on horizontal bars", {
   skip_if_not_installed("vdiffr")
-  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
-
+  old_ops <- options(ggerror.silent_zero_warning = TRUE)
+  on.exit(options(old_ops), add = TRUE)
+  
   dat <- mtcars
   dat$rn <- rownames(mtcars)
 
@@ -316,8 +317,9 @@ test_that("per-side width suppresses the shared-bound cap on horizontal bars", {
 
 test_that("per-side width suppresses the shared-bound cap on vertical bars", {
   skip_if_not_installed("vdiffr")
-  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
-
+  old_ops <- options(ggerror.silent_zero_warning = TRUE)
+  on.exit(options(old_ops), add = TRUE)
+  
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
     ggplot2::geom_point() +
     geom_error(
@@ -333,7 +335,10 @@ test_that("width_neg does not leak to the positive side via partial matching", {
   # `params$width` used to silently resolve to `params$width_neg` and collapse
   # xmin/xmax to x for every row. Only `width_neg` is set here; xmax - xmin
   # must still be the default full width on the positive side.
-  withr::local_options(list(ggerror.silent_zero_warning = TRUE))
+
+  old_ops <- options(ggerror.silent_zero_warning = TRUE)
+  on.exit(options(old_ops), add = TRUE)
+  
   p <- ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl), mpg)) +
     geom_error(
       ggplot2::aes(error_neg = 0, error_pos = drat),
