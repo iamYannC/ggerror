@@ -1,7 +1,5 @@
 # ggerror
 
-[![ORCID](https://img.shields.io/badge/ORCID-0009--0009--0509--3609-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-0509-3609)
-
 [![CRAN
 status](https://www.r-pkg.org/badges/version/ggerror)](https://CRAN.R-project.org/package=ggerror)
 [![R-CMD-check](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml)
