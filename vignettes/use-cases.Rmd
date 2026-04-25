@@ -1,0 +1,157 @@
+---
+title: "Use cases: stats and residuals"
+output:
+  rmarkdown::html_vignette:
+    css: vignette.css
+vignette: >
+  %\VignetteIndexEntry{Use cases: stats and residuals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 96,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r imports}
+library(ggplot2)
+library(ggerror)
+data(CO2)
+
+set_theme(
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title = element_text(family = "consolas", size = 11, hjust = 0),
+      axis.title = element_blank()
+    )
+)
+```
+
+The `CO2` dataset records carbon dioxide uptake in *Echinochloa
+crus-galli* plants from Quebec and Mississippi, chilled overnight or
+not — 84 observations across 5 variables. We'll use it to show two
+end-to-end use cases: summarising raw data with `stat_error()`, and
+reading model residuals as direction-aware bars with `sign_aware`.
+
+## Summarising raw data with `stat_error()`
+
+`stat_error()` follows ggplot2's `fun.data` contract — pass a summary
+function and it computes `y`, `ymin`, `ymax` per group. The default
+is `mean_se` (mean ± one standard error):
+
+```{r stat-default}
+ggplot(CO2, aes(Treatment, uptake)) +
+  stat_error() +
+  labs(title = "stat_error()  # default = mean_se")
+```
+
+Switch to a 95% confidence interval and a `pointrange` base geom:
+
+```{r stat-ci}
+ggplot(CO2, aes(Treatment, uptake)) +
+  stat_error(fun = "mean_ci", error_geom = "pointrange") +
+  labs(title = 'stat_error(fun = "mean_ci", error_geom = "pointrange")')
+```
+
+The `conf.int` argument controls the CI width — `0.95` by default,
+but anything in `(0, 1)` works:
+
+```{r stat-conf}
+ggplot(CO2, aes(Treatment, uptake)) +
+  stat_error(fun = "mean_ci", conf.int = 0.99,
+             error_geom = "pointrange") +
+  labs(title = 'stat_error(fun = "mean_ci", conf.int = 0.99)')
+```
+
+### Custom summary function: median ± mean absolute deviation
+
+The `fun` slot accepts any function that takes a numeric vector and
+returns a one-row data frame with `y`, `ymin`, `ymax`. Here's a
+robust dispersion summary — **median** as the centre,
+**mean absolute deviation from the median** as the spread:
+
+```{r stat-custom}
+mae_summary <- function(y) {
+  md  <- median(y)
+  mae <- mean(abs(y - md))
+  data.frame(y = md, ymin = md - mae, ymax = md + mae)
+}
+
+ggplot(CO2, aes(Type, uptake)) +
+  stat_error(fun = mae_summary, error_geom = "crossbar",
+             fill = "grey90") +
+  facet_wrap(~ Treatment) +
+  labs(title = "stat_error(fun = median ± mean(|x − median|))")
+```
+
+Custom functions can take extra parameters too — `stat_error()`
+forwards any matching named arguments via its signature-aware
+dispatcher. (For one-off knobs, just close over them; for plumbed
+arguments, name them in the function and pass at the call site.)
+
+> **Aside** — `geom_error(stat = "error", fun = ...)` is the
+> layer-level equivalent of `stat_error()`. Useful when you want
+> the geom call to lead and the stat to be incidental.
+
+## Residual diagnostics with `sign_aware`
+
+`sign_aware = TRUE` interprets the sign of `error` as direction:
+positive values extend in the positive axis direction, negative in
+the negative. That single switch turns residuals into a self-coloring
+diagnostic layer.
+
+Fit a model and attach predictions and residuals:
+
+```{r fit-model}
+model   <- lm(uptake ~ conc, data = CO2)
+co2_fit <- transform(CO2,
+                     predicted = predict(model),
+                     residual  = resid(model))
+```
+
+Now plot the fitted line, the actual observations, and the residuals
+all in one layer. Each bar runs from the fitted curve up or down to
+the corresponding observation. Colour says direction:
+
+```{r residuals-plot, fig.height = 4.5}
+ggplot(co2_fit, aes(conc, predicted)) +
+  geom_line(linewidth = 0.4, colour = "grey40") +
+  geom_point(aes(y = uptake), alpha = 0.5) +
+  geom_error(aes(error = residual),
+             sign_aware  = TRUE,
+             orientation = "x",
+             colour_pos  = "firebrick",
+             colour_neg  = "steelblue",
+             linewidth   = 0.5) +
+  labs(title = paste(
+    "lm(uptake ~ conc) |> resid()",
+    "geom_error(error = residual, sign_aware = TRUE)",
+    sep = "\n"
+  ))
+```
+
+**Reading it**: each red bar marks a plant whose actual uptake
+exceeded the model's prediction (under-prediction); each blue bar
+marks a plant the model over-predicted. Bar **length** is the
+residual magnitude. The clustering of same-coloured runs along
+`conc` is informative on its own — a hint of unmodeled structure.
+
+Because both axes are numeric here, `ggerror` can't infer the
+direction the bar should extend, so we pass `orientation = "x"`
+explicitly. (When one axis is discrete, orientation is inferred.)
+
+A few diagnostic notes:
+
+- A **zero residual** produces no bar — there's nothing to draw.
+- An **`NA` residual** also draws nothing, and triggers a row-indexed
+  warning so you can find the offending observation.
+- `sign_aware = TRUE` is incompatible with `stat = "error"` — the
+  stat already produces symmetric bounds. The combination errors at
+  layer construction.

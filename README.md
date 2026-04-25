@@ -5,46 +5,84 @@
 [![Codecov test coverage](https://codecov.io/gh/iamYannC/ggerror/graph/badge.svg)](https://app.codecov.io/gh/iamYannC/ggerror)
 
 
-`ggerror` simplifies **ggplot2**'s error geoms and introduces asymetric error bars and customization.
+`ggerror` collapses **ggplot2**'s family of error geoms into one
+error-focused API. Pass `error` (or `error_neg` + `error_pos`) and
+`ggerror` figures out orientation, picks the right base geom, and lets
+you style each side independently. It also computes errors directly
+from raw data with `stat_error()`, and renders signed quantities (like
+residuals) as direction-aware bars in a single layer.
 
-Instead of wiring `ymin` / `ymax` or `xmin` / `xmax` by hand, you supply
-`error` (or `error_neg` + `error_pos`) and `ggerror` will do the rest for you. It can be as simple as providing a single `error` argument, yet offer full customization options for per-side styling.
-
-### Installation 
+### Installation
 
 ``` r
+install.packages("ggerror")          # CRAN
+pak::pak("iamyannc/ggerror")         # development version
+```
 
-install.packages("ggerror") # 0.3.0 
-pak::pak("iamyannc/ggerror") # 1.0.0 - better error messages & stat_error & sign_aware!
+### Quickstart
 
+The examples below use the built-in `CO2` dataset — CO₂ uptake by
+*Echinochloa crus-galli* plants from Quebec and Mississippi, chilled
+overnight or not.
+
+``` r
 library(ggplot2)
 library(ggerror)
 
-p <- ggplot(mtcars, aes(mpg, rownames(mtcars))) +
-  geom_point()
+set_theme(theme_minimal(base_size = 13))
 
-# Symmetric error bars, using default geom errorbar
-p + geom_error(aes(error = drat))
-
-# Asymmetric error bars, using geom_error_pointrange and per-side styling
-p + geom_error_pointrange(aes(error_neg = drat / 2, error_pos = drat, linetype_neg = "dashed"))
-
-# One-sided error bars, using the error_geom argument
-p + geom_error(error_geom = "linerange", aes(error_neg = NA, error_pos = drat))
-
+co2_sum <- aggregate(uptake ~ Type + Treatment, data = CO2,
+                     FUN = function(x) c(m = mean(x), s = sd(x), v = var(x)))
+co2_sum <- do.call(data.frame, co2_sum)
 ```
-#### Symmetric error bars
 
-<a href="man/figures/examples_basic.png"> <img src="man/figures/examples_basic.png" alt="ggerror example geoms - symmetric" width="100%"/> </a>
+#### Symmetric errors — pinned wrapper
 
-#### Asymmetric error bars
+``` r
+ggplot(co2_sum, aes(Type, uptake.m, colour = Treatment)) +
+  geom_point(size = 3) +
+  geom_error_pointrange(aes(error = uptake.s),
+                        position = position_dodge(0.4))
+```
 
-<a href="man/figures/examples_asymmetric.png"> <img src="man/figures/examples_asymmetric.png" alt="ggerror example geoms - asymmetric" width="100%"/> </a>
+#### Asymmetric + per-side styling — `error_geom` argument form
 
+``` r
+ggplot(co2_sum, aes(Type, uptake.m)) +
+  geom_error(aes(error_neg = uptake.s, error_pos = sqrt(uptake.v)),
+             error_geom = "crossbar",
+             colour_neg = "steelblue", colour_pos = "firebrick",
+             width_neg = 0.3, width_pos = 0.6) +
+  facet_wrap(~ Treatment)
+```
 
-For detailed examples of symmetric, asymmetric, one-sided, and per-side styling,
-see [`vignette("ggerror")`](https://iamyannc.github.io/ggerror/articles/ggerror.html).
+#### Summarise raw data with `stat_error()`
 
+``` r
+ggplot(CO2, aes(Treatment, uptake)) +
+  stat_error(fun = "mean_ci", error_geom = "pointrange")
+```
+
+→ see `vignette("use-cases")` for the full walkthrough, including
+custom summary functions.
+
+#### Residuals in one layer with `sign_aware`
+
+``` r
+model <- lm(uptake ~ conc, data = CO2)
+co2_fit <- transform(CO2,
+                     predicted = predict(model),
+                     residual  = resid(model))
+
+ggplot(co2_fit, aes(conc, predicted)) +
+  geom_line() +
+  geom_point(aes(y = uptake), alpha = 0.4) +
+  geom_error(aes(error = residual),
+             sign_aware = TRUE, orientation = "x",
+             colour_pos = "firebrick", colour_neg = "steelblue")
+```
+
+→ see `vignette("use-cases")` for the residual-diagnostics walkthrough.
 
 ### Supported geoms
 
@@ -55,6 +93,18 @@ see [`vignette("ggerror")`](https://iamyannc.github.io/ggerror/articles/ggerror.
 | `geom_pointrange` | `"pointrange"`                 | `geom_error_pointrange()` |
 | `geom_crossbar`   | `"crossbar"`                   | `geom_error_crossbar()`   |
 
+Both the pinned wrapper (`geom_error_pointrange()`) and the argument
+form (`geom_error(error_geom = "pointrange")`) produce the same layer —
+pick whichever reads better at the call site. The argument form
+composes well with functional patterns like
+`purrr::map(geoms, ~ geom_error(error_geom = .x, ...))`.
+
+### Learn more
+
+- `vignette("ggerror")` — the geom API tutorial: simple, asymmetric,
+  one-sided.
+- `vignette("use-cases")` — `stat_error()` summaries and `sign_aware`
+  residuals on a real model.
 
 ### Disclaimer
 

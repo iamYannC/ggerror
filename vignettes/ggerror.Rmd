@@ -1,13 +1,12 @@
 ---
-title: "ggerror: The Basics"
+title: "Using ggerror"
 output:
   rmarkdown::html_vignette:
     css: vignette.css
 vignette: >
-  %\VignetteIndexEntry{ggerror: The Basics}
+  %\VignetteIndexEntry{Using ggerror}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-
 ---
 
 ```{r setup, include = FALSE}
@@ -21,131 +20,181 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Why `ggerror`?
+
+Base `ggplot2` ships several error geoms, and using them means
+deciding on orientation, which axis the error follows, and how to
+wire the lower and upper bounds correctly. That overhead piles up
+fast. `ggerror` collapses it into one `error`-focused API: one
+aesthetic for symmetric, two for asymmetric, and `NA` for one-sided.
+
+This vignette walks the geom API on a single dataset. For
+`stat_error()` summaries and `sign_aware` residuals, see
+`vignette("use-cases")`.
+
+## Setup
+
+We use `CO2` — CO₂ uptake by *Echinochloa crus-galli* plants from
+Quebec and Mississippi, chilled overnight or not. A small
+pre-summary gives us per-group mean, standard deviation, and
+variance to play with.
+
 ```{r imports}
 library(ggplot2)
 library(ggerror)
-```
+data(CO2)
 
-## Why `ggerror`?
-
-Base `ggplot2` gives you several different error geoms, but using them means
-deciding on orientation, which axis the error should follow, and how to
-wire the lower and upper bounds correctly.
-It creates a overhead and a cluncky DX.
-`ggerror` collapses that into one layer and one error-focused API.
-
-Everything in this vignette uses `mtcars`, so you can copy the examples
-directly.
-
-```{r demo-data}
-set.seed(1)
-mt <- mtcars[sample(nrow(mtcars), 5), ]
-mt$rn <- rownames(mt)
-```
-```{r ggplot2-settings}
 set_theme(
-  theme_minimal() + theme(
-  plot.title = element_text(hjust = 0, family = "consolas", size = 12),
-  axis.title = element_blank()
-))
-p <- ggplot(mt, aes(mpg, rn)) +
-  geom_point()
-```
-## Symmetric errors
-```{r base-plot}
-p + geom_error(aes(error = drat))
-```
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title = element_text(family = "consolas", size = 11, hjust = 0),
+      axis.title = element_blank()
+    )
+)
 
-`geom_error()` infers orientation from the data.
-When one axis is discrete and the other is numeric, the error expands along the
-numeric axis.
-The default geom is `errorbbar`, which triggers under the hood `geom_errorbar()`.
-
-## Choosing the error geom
-
-You can pick the base range geom either through `error_geom` or via one of the
-pinned wrapper functions.
-
-```{r argument_or_pinned}
-p + geom_error(aes(error = drat), error_geom = "crossbar")
-p + geom_error_crossbar(aes(error = drat))
+co2_sum <- aggregate(uptake ~ Type + Treatment, data = CO2,
+                     FUN = function(x) c(m = mean(x), s = sd(x), v = var(x)))
+co2_sum <- do.call(data.frame, co2_sum)
+co2_sum
 ```
 
-Supported values for `error_geom` are `"errorbar"`, `"linerange"`, `"crossbar"`, and
-`"pointrange"`.
+## Simple and defaults
+
+A single `error` aesthetic is enough — `ggerror` infers orientation
+from the data (here: numeric `uptake.m` along x, discrete `Type`
+along y) and picks `geom_errorbar` as the default base geom.
+
+```{r simple-default}
+p <- ggplot(co2_sum, aes(uptake.m, Type, colour = Treatment)) +
+  geom_point(size = 3, position = position_dodge(0.4))
+
+p +
+  geom_error(aes(error = uptake.s),
+             position = position_dodge(0.4)) +
+  labs(title = "geom_error(aes(error = uptake.s))")
+```
+
+Same data, pinned `geom_error_pointrange()` wrapper:
+
+```{r simple-pinned}
+ggplot(co2_sum, aes(uptake.m, Type, colour = Treatment)) +
+  geom_error_pointrange(aes(error = uptake.s),
+                        position = position_dodge(0.4),
+                        size = 0.6) +
+  labs(title = "geom_error_pointrange(aes(error = uptake.s))")
+```
+
+Same data, swapped via the `error_geom` argument:
+
+```{r simple-arg}
+p +
+  geom_error(aes(error = uptake.s),
+             error_geom = "linerange",
+             position = position_dodge(0.4),
+             linewidth = 1) +
+  labs(title = "geom_error(error_geom = \"linerange\")")
+```
 
 <div class="tip">
-💡 **Tip:** Make use of `geom_error()` for a functional programming approach by using the `error_geom` argument with `purrr::map()`.
+💡 **Tip:** Because `error_geom` is a regular argument, you can iterate
+over it functionally — useful when scanning a few presentations to
+pick one:
+
+```{r fp-tip, eval = FALSE}
+purrr::map(c("errorbar", "linerange", "crossbar", "pointrange"),
+           ~ p + geom_error(aes(error = uptake.s), error_geom = .x))
+```
+
 </div>
 
 ## Asymmetric errors
 
-Use `error_neg` and `error_pos` when the negative and positive extents differ.
+`error_neg` and `error_pos` extend in opposite directions regardless
+of orientation. They're useful when the dispersion measure on each
+side carries different meaning — say, **standard deviation** on the
+low side and **standard deviation × 1.5** on the high side, or here,
+**SD** vs **√Var** as a sanity check that they're equal.
 
-```{r asymmetric-basic}
-  p + geom_error(aes(
-    error_neg = drat / 2,
-    error_pos = drat)
-    )
+```{r asym-sd-vs-var}
+ggplot(co2_sum, aes(uptake.m, Type)) +
+  geom_point(size = 3) +
+  geom_error(aes(error_neg = uptake.s,
+                 error_pos = sqrt(uptake.v)),
+             colour_neg = "steelblue",
+             colour_pos = "firebrick",
+             linewidth  = 1) +
+  facet_wrap(~ Treatment) +
+  labs(title = "error_neg = sd ; error_pos = sqrt(var) — by Treatment")
 ```
 
-`error_neg` extends in the negative direction and `error_pos` extends in the
-positive direction, regardless of whether the error is horizontal or vertical.
-Both must be supplied together.
-Not having to deal with orientation and `min`/`max` reduces overhead and ensures you stay focused on displaying the data, rather than the mechanics of the plot.
+The same pattern works for **standard error vs confidence interval**,
+**IQR halves**, or any other paired dispersion measures — swap the
+two `error_*` expressions, the rest of the call stays the same.
+
+Per-side styling extends to `colour`, `fill`, `linewidth`, `linetype`,
+`alpha`, and `width`. Pass either the side-specific form (`colour_neg`,
+`width_pos`) or the shared form (`colour`, `width`); side-specific
+wins.
+
+```{r asym-crossbar}
+ggplot(co2_sum, aes(uptake.m, Type)) +
+  geom_error(aes(error_neg = uptake.s,
+                 error_pos = sqrt(uptake.v)),
+             error_geom = "crossbar",
+             fill_neg = "grey85", fill_pos = "grey45",
+             width_neg = 0.3,     width_pos = 0.6) +
+  facet_wrap(~ Treatment) +
+  labs(title = "crossbar with per-side fills + widths")
+```
 
 ## One-sided bars
 
-Set the unused side to `NA` for a genuine one-sided error bar —
-`ggerror` auto-suppresses the cap and stem on that side.
+Suppose downstream stakeholders only care about **shortfall** —
+how far each group falls *below* its mean uptake — and treat
+overshoot as uninteresting. Set the unused side to `NA` and
+`ggerror` suppresses the cap and stem on that side automatically.
 
-```{r one-sided}
-p +
-  geom_error(aes(
-    error_neg = NA,
-    error_pos = drat
-  ))
+```{r one-sided-basic}
+ggplot(co2_sum, aes(uptake.m, Type, colour = Treatment)) +
+  geom_point(size = 3, position = position_dodge(0.4)) +
+  geom_error(aes(error_neg = uptake.s, error_pos = NA),
+             position = position_dodge(0.4),
+             linewidth = 1) +
+  labs(title = "downside only — error_pos = NA")
 ```
 
-Passing `0` instead of `NA` still works but is soft-deprecated since
-v1.0.0 — you'll get a migration warning, and you'd also need
-`width_neg = 0` to hide the shared cap. `NA` is the cleaner idiom.
+A linerange variant — heavier line, no caps — reads cleanly when
+overlaid on raw points:
 
-## More customization: per-side styling
-
-For finer control, the negative and positive sides can be styled separately
-with fixed `_neg` and `_pos` parameters for `colour`, `fill`, `linewidth`,
-`linetype`, `alpha`, and `width`.
-
-```{r asymmetric-styled}
-p +
-  geom_error(aes(
-    error_neg = drat / 2,
-    error_pos = drat),
-
-    colour_neg = "steelblue",
-    colour_pos = "firebrick",
-    linewidth = 2 # you can still control both sides of the error bar
-  )
+```{r one-sided-linerange}
+ggplot(CO2, aes(uptake, Type)) +
+  geom_jitter(height = 0.2, alpha = 0.3) +
+  geom_error_linerange(data = co2_sum,
+                       aes(x = uptake.m,
+                           error_neg = uptake.s,
+                           error_pos = NA),
+                       linewidth  = 1.5,
+                       colour     = "firebrick") +
+  facet_wrap(~ Treatment) +
+  labs(title = "shortfall over raw observations")
 ```
 
-```{r asymmetric-styled2}
-p +
-  geom_error(aes(
-    error_neg = drat / 2,
-    error_pos = drat),
-    
-    error_geom = "crossbar",
-    fill_neg = "grey90",
-    fill_pos = "grey30",
-    width_neg = 0.2,
-    width_pos = 0.6
-  )
+A pointrange variant marks the mean and the lower bound in one go:
+
+```{r one-sided-pointrange}
+ggplot(co2_sum, aes(uptake.m, Type)) +
+  geom_error_pointrange(aes(error_neg = uptake.s, error_pos = NA),
+                        size = 0.6, linewidth = 1,
+                        linetype_neg = "solid",
+                        colour = "firebrick") +
+  facet_wrap(~ Treatment) +
+  labs(title = "pointrange one-sided")
 ```
+
+> Passing `0` instead of `NA` still works for backward compatibility
+> but is soft-deprecated and will warn.
 
 ## Extending ggerror
 
 If you know of, or need, a new error geom, please open an issue on the [GitHub repository](https://github.com/iamyannc/ggerror/issues).
 My first motiviation was to simplify the heck out of the error geoms, reducing the aesthetics to a single `error` aesthetic. The rest (asymmetric, one-sided, etc) are just niceties that I added along the way.
-
-
