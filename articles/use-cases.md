@@ -41,7 +41,7 @@ and summarizing raw data with
 positive values extend in the positive axis direction, negative in the
 negative.
 
-#### Let’s fit a linear model and see how `Temp` can be explained by `Wind`.
+### Let’s fit a linear model and see how `Temp` can be explained by `Wind`.
 
 ``` r
 model   <- lm(Temp ~ Wind, data = airq)

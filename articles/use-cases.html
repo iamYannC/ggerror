@@ -110,10 +110,10 @@ plot and summarizing raw data with <code><a href="../reference/stat_error.html">
 <p><code>sign_aware = TRUE</code> interprets the sign of
 <code>error</code> as direction: positive values extend in the positive
 axis direction, negative in the negative.</p>
-<div class="section level4">
-<h4 id="lets-fit-a-linear-model-and-see-how-temp-can-be-explained-by-wind-">Let’s fit a linear model and see how <code>Temp</code> can be
+<div class="section level3">
+<h3 id="lets-fit-a-linear-model-and-see-how-temp-can-be-explained-by-wind-">Let’s fit a linear model and see how <code>Temp</code> can be
 explained by <code>Wind</code>.<a class="anchor" aria-label="anchor" href="#lets-fit-a-linear-model-and-see-how-temp-can-be-explained-by-wind-"></a>
-</h4>
+</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Temp</span> <span class="op">~</span> <span class="va">Wind</span>, data <span class="op">=</span> <span class="va">airq</span><span class="op">)</span></span>
 <span><span class="va">airq_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">airquality</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Temp'</span>,<span class="st">'Wind'</span><span class="op">)</span><span class="op">]</span>,</span>
