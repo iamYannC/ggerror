@@ -2,7 +2,7 @@
 
 ### Articles
 
-- [ggerror: The
-  Basics](https://iamyannc.github.io/ggerror/articles/ggerror.md):
-- [stat_error() and sign_aware +
-  demo](https://iamyannc.github.io/ggerror/articles/v100ft.md):
+- [Using
+  ggerror](https://iamyannc.github.io/ggerror/articles/ggerror.md):
+- [Use cases: stats and
+  residuals](https://iamyannc.github.io/ggerror/articles/use-cases.md):
