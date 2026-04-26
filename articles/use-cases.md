@@ -182,7 +182,7 @@ you’d write `stat_error(fun = mae_summary, scale_by = 2)`.
 Passing `scale_by = 2` to `stat_error`
 
 ``` r
-ggplot(airq, aes(Month, Wind)) +
+ggplot(airq, aes(Month, Temp)) +
   stat_error(fun = mae_summary, scale_by = 2, error_geom = "crossbar") +
   stat_summary(geom = "point")
 ```
