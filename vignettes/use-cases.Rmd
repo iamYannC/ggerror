@@ -66,13 +66,15 @@ airq$Month <- factor(airq$Month, labels = month.abb[5:9])
 ```
 
 <details>
-<summary>More on <code>airquality</code> (click to expand, or type <code>?airquality</code>)</summary>
+
+<summary>More on <code>airquality</code> (click to expand, or type
+<code>?airquality</code>)</summary>
 
 ::: {.alert .alert-info}
 `airquality` contains daily New York air-quality measurements from May
-to September 1973. The main continuous variables are `Ozone`,
-`Solar.R`, `Wind`, and `Temp`; `Month` and `Day` identify when each
-measurement was taken.
+to September 1973. The main continuous variables are `Ozone`, `Solar.R`,
+`Wind`, and `Temp`; `Month` and `Day` identify when each measurement was
+taken.
 :::
 
 </details>
@@ -118,15 +120,11 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
 ```
 
 - **Flexible styling**: `ggerror` provides us with per-direction styling
-  (`color`) as well as global styles (`alpha`, `linewidth`, etc.). How to
-  interpret the plot is up to you. You may want to color the direction
-  differently, to show the direction the bar extends, rather than the sign of the error.
-  Experiment with this by tweaking either the actual color value,
-  or the `neg/pos` suffix.
-
-
-
-
+  (`color`) as well as global styles (`alpha`, `linewidth`, etc.). How
+  to interpret the plot is up to you. You may want to color the
+  direction differently, to show the direction the bar extends, rather
+  than the sign of the error. Experiment with this by tweaking either
+  the actual color value, or the `neg/pos` suffix.
 
 - **`orientation = "x"`** Because both axes are numeric, `ggerror` can't
   infer the direction the bar should extend, so we pass
@@ -142,9 +140,9 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
 
 ## Summarizing raw data with `stat_error()`
 
-`stat_error()` follows ggplot2's `fun.data` contract: pass a summary function
-and it computes `y`, `ymin`, `ymax` per group. Regardless of the
-orientation of your plot, the summary function **must return a data
+`stat_error()` follows ggplot2's `fun.data` contract: pass a summary
+function and it computes `y`, `ymin`, `ymax` per group. Regardless of
+the orientation of your plot, the summary function **must return a data
 frame with these exact column names**.
 
 The default summary function is `mean_se` (mean ± one standard error):
@@ -155,8 +153,10 @@ ggplot(airq, aes(Month, Temp)) +
   stat_summary(geom='point') +
   labs(title = "stat_error() with default = mean_se") 
 ```
-`ggerror` ships two summary functions. You just saw the default, `mean_se`. The second is `mean_ci` which computes the mean and 95% confidence interval error
-bars.
+
+`ggerror` ships two summary functions. You just saw the default,
+`mean_se`. The second is `mean_ci` which computes the mean and 95%
+confidence interval error bars.
 
 ```{r stat-ci}
 ggplot(airq, aes(Month, Temp)) +
@@ -191,16 +191,7 @@ conflicts).
 **median** as the center, **mean absolute deviation from the median** as
 the spread:
 
-\[
-\mathrm{md}(x) = \mathrm{median}(x), \qquad
-\mathrm{mae}(x) = \frac{1}{n}\sum_{i=1}^{n}\left|x_i - \mathrm{md}(x)\right|
-\]
-
-\[
-y = \mathrm{md}(x), \qquad
-y_{\min} = \mathrm{md}(x) - \mathrm{mae}(x), \qquad
-y_{\max} = \mathrm{md}(x) + \mathrm{mae}(x)
-\]
+$$\mathrm{mae}(x) = \frac{1}{n}\sum_{i=1}^{n}\left|x_i - \mathrm{md}(x)\right|$$
 
 ```{r stat-custom}
 mae_summary <- function(my_vec, scale_by = 1) {
@@ -217,10 +208,11 @@ ggplot(airq, aes(Month, Temp)) +
 
 Custom functions can take extra parameters too — `stat_error()` forwards
 any matching named arguments in the same way you are used to using the
-`...` argument. In this example, to multiply the error by 2, you'd
-write `stat_error(fun = mae_summary, scale_by = 2)`.
+`...` argument. In this example, to multiply the error by 2, you'd write
+`stat_error(fun = mae_summary, scale_by = 2)`.
 
 <details>
+
 <summary>Passing `scale_by = 2` to `stat_error`</summary>
 
 ```{r aditional-code-collapsed}
