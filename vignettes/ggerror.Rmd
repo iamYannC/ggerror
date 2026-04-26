@@ -26,7 +26,7 @@ library(ggerror)
 
 set_theme(
   theme_minimal(base_size = 13) +
-    theme( 
+    theme(
       plot.title = element_text(
         family = "mono",
         size = 11,
@@ -39,17 +39,17 @@ set_theme(
 
 ## Why `ggerror`?
 
-`ggplot2` ships several error geoms. `ggerror` started as a wrapper to simplify their usage, by dropping `x/y`-`min/max` with a one aesthetics **`error`**. This doesn't just simplify the API, but it also shift the focus to the actual intention: to visualize some magnitude as error that extends from a specified value (or a central metric, more on that at `vignette("use-cases")`).
+`ggplot2` ships several error geoms. `ggerror` started as a wrapper to simplify their usage by replacing the `x/y`-`min/max` inputs with one aesthetic: **`error`**. This doesn't just simplify the API, it also shifts the focus to the actual intention: to visualize some magnitude as error that extends from a specified value (or a central metric; more on that in `vignette("use-cases")`).
 
-`ggerror` is no longer just a wrapper, but it offers extra functionality compared to core `ggplot2`'s error geoms.
+`ggerror` is no longer just a wrapper; it offers extra functionality compared to `ggplot2`'s core error geoms.
 
-This vignette demonstrates the basic usage of the package. For `stat_error()` summaries and `sign_aware` erros, see `vignette("use-cases")`.
+This vignette demonstrates the basic usage of the package. For `stat_error()` summaries and `sign_aware` errors, see `vignette("use-cases")`.
 
 ## Setup
 
 We use `airquality` — Daily air quality measurements in New York, May to September 1973.
 
-This dataset has 153 rows with 6 columns: 4 continuous measurements, Month and Day.
+This dataset has 153 rows and 6 columns: four continuous measurements, plus Month and Day.
 
 ```{r data-prep}
 data("airquality"); airq <- airquality
@@ -82,9 +82,8 @@ A single `error` aesthetic is enough — `ggerror` infers orientation from the d
 
 p + 
   geom_error(aes(error = sd_temp_monthly),
-             error_geom = "pointrange",
-             size = 0.7, shape = 18) +
-  labs(title = "p + geom_error(aes(error = sd_temp_monthly)",
+             width = 0.4) +
+  labs(title = "p + geom_error(aes(error = sd_temp_monthly))",
        caption = "p <- ggplot(aq_monthly_avg, aes(Temp, Month))"
        )
 ```
@@ -109,17 +108,17 @@ p +
 ```
 
 ::: {.alert .alert-info}
-💡 **Tip:** Because `error_geom` is a regular argument, you can iterate over it functionally:
-:::
+💡 **Tip:** Because `error_geom` is just an argument, you can iterate over it functionally:
 
 ```{r fp-tip, eval = FALSE}
 purrr::map(c("errorbar", "linerange", "crossbar", "pointrange"),
            ~ p + geom_error(aes(error = sd_temp_monthly), error_geom = .x))
 ```
+:::
 
 ## Asymmetric errors
 
-`error_neg` and `error_pos` extend in opposite directions regardless of orientation. They're useful when the dispersion measure on each side carries different meaning — say, **standard deviation** on the low side and **standard deviation × 1.5** on the high side, or here, **SD** vs **√Var** as a sanity check that they're equal.
+`error_neg` and `error_pos` extend in opposite directions regardless of orientation. They're useful when the dispersion measure on each side carries different meaning.
 
 ```{r asym-prep-plot}
 may_week <- subset(airq[1:7,], Month == 'May')
@@ -129,26 +128,27 @@ may_summary <- data.frame(
   Temp = may_week$Temp,
   dist2min = may_week$Temp - min(may_week$Temp, na.rm = TRUE),
   dist2max = max(may_week$Temp, na.rm = TRUE) - may_week$Temp
-) # each Temp point now has a value of it's distance from the min Temp in the dataset, and a value of the distance from the max Temp in the data set.
+) # Each Temp point now has its distance from the minimum Temp in the
+  # dataset, and its distance from the maximum Temp in the dataset.
 
 ```
 
 ```{r asym-sd-vs-var}
 
-ggplot(may_summary,aes(x = Temp, y = Day)) +
+ggplot(may_summary, aes(x = Temp, y = Day)) +
   geom_error(aes(error_neg =  dist2min,
                  error_pos = dist2max),
              error_geom = "pointrange",
-             colour_neg = "steelblue",
-             colour_pos = "firebrick",
+             color_neg = "steelblue",
+             color_pos = "firebrick",
              linewidth  = 1
              ) +
-  labs(title = "geom_error(error_neg = dist2min, error_pos = dist2max")
+  labs(title = "geom_error(error_neg = dist2min, error_pos = dist2max)")
 ```
 
-Deciding what consists of the negative or the positive error is up to your discretion.
+Deciding what counts as the negative or the positive error is up to your discretion.
 
-Per-side styling extends to `colour`, `fill`, `linewidth`, `linetype`, `alpha`, and `width`. Pass either the side-specific form (`colour_neg`, `width_pos`) or the shared form (`colour`, `width`);
+Per-side styling extends to `color`, `fill`, `linewidth`, `linetype`, `alpha`, and `width`. Pass either the side-specific form (`color_neg`, `width_pos`) or the shared form (`color`, `width`).
 
 ```{r asym-crossbar}
 ggplot(may_summary, aes(Temp, Day)) +
@@ -162,7 +162,7 @@ ggplot(may_summary, aes(Temp, Day)) +
 
 ## One-sided bars
 
-Sometimes we care mostly about errors torwards one side, and dismis the other as uninteresting. For example, how each observation falls *below* a threshold. Set the unused side to `NA` and `ggerror` suppresses the cap and stem on that side automatically.
+Sometimes we care mostly about errors towards one side, and dismiss the other as uninteresting. For example, how each observation falls *below* a threshold. Set the unused side to `NA` and `ggerror` suppresses the cap and stem on that side automatically.
 
 ```{r one-sided-basic}
 ggplot(may_summary, aes(Temp, Day)) +
@@ -174,9 +174,9 @@ ggplot(may_summary, aes(Temp, Day)) +
   labs(title = "geom_error(aes(error_neg=dist2min, error_pos = NA))")
 ```
 
-**Remember:** The errors are simply a magnitude. They dont even have to be treated as errors, like in the last couple examples, where they are treated as distances from some arbitrary value (In this one-side example: the distance of each Temperature from the minimum temperature that was measured).
+**Remember:** The errors are simply a magnitude. They don't even have to be treated as errors, like in the last couple of examples, where they are treated as distances from some arbitrary value (in this one-sided example: the distance of each temperature from the minimum temperature that was measured).
 
-> Passing `0` instead of `NA` works but is discouraged, for several reasons: 1. `NA` is more explicit than `0`. 2. Since `0` is treated as a value, it won't automatically cap out the undesired side of the error bars, for example.
+> Passing `0` instead of `NA` works, but is discouraged, for several reasons: 1. `NA` is more explicit than `0`. 2. Since `0` is treated as a value, it won't automatically cap out the undesired side of the error bars, for example.
 
 **See `vignette("use-cases")` for more advanced options**.
 

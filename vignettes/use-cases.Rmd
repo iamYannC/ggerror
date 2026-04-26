@@ -41,7 +41,7 @@ set_theme(
 ```
 
 This vignette demonstrates more advanced usage of the package. For a
-"get-started" and overview of this package's basic usecase, see
+getting-started guide and overview of this package's basic use case, see
 `vignette("ggerror")`.
 
 ## Setup
@@ -53,6 +53,7 @@ This dataset has 153 rows with 6 columns: 4 continuous measurements,
 Month and Day.
 
 ```{r data-prep}
+data("airquality"); airq <- airquality
 
 # It wouldn't be an R workflow without minimal data cleaning...
 day_in_month <- function(day_in_month, month, year) {
@@ -64,24 +65,20 @@ airq$Month <- factor(airq$Month, labels = month.abb[5:9])
 
 ```
 
-\> NOTE FROM HUMAN TO LLM: \>
+<details>
+<summary>More on <code>airquality</code> (click to expand, or type <code>?airquality</code>)</summary>
 
-Style improvement: Beneath ##SETUP, add callout-info class that is
-collapsible, and collapsed by default, with the data info and more from
-`airquality` docs. Offer the users to expand the following info box for
-more information, or advise them to just type `?airquality` for more
-information. vignette should support collapsible HTML (it is rendered to
-a pkgdown website, im not mistaken - verify!).
+::: {.alert .alert-info}
+`airquality` contains daily New York air-quality measurements from May
+to September 1973. The main continuous variables are `Ozone`,
+`Solar.R`, `Wind`, and `Temp`; `Month` and `Day` identify when each
+measurement was taken.
+:::
 
-ALSO: for the summary function, please add valid LaTeX to show the math
-definition of these functions. IF YOU STRUGGLE WITH LATEX: leave a
-placeholder for an image, i will take a screenshot. but prioritise to
-render this nitly with latex.
+</details>
 
-\> \> END NOTE
-
-Let's use it to show two use cases: Plot sign-aware residual plot and
-summarizing raw data with `stat_error()`.
+Let's use it to show two use cases: plotting a sign-aware residual plot
+and summarizing raw data with `stat_error()`.
 
 ## Residual plot with `sign_aware`
 
@@ -99,8 +96,8 @@ airq_fit <- cbind(airquality[,c('Temp','Wind')],
                  )
 ```
 
-Let us compliment usual ggplot2's workflow for plotting residual vs true
-vales:
+Let us complement the usual ggplot2 workflow for plotting residuals
+versus true values:
 
 ```{r residuals-plot, fig.height = 4.5}
 ggplot(airq_fit, aes(x = Wind, y = predicted)) +
@@ -121,11 +118,15 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
 ```
 
 - **Flexible styling**: `ggerror` provides us with per-direction styling
-  (`color`) as well as global styles (`alpha`,`linewidth` etc..). How to
+  (`color`) as well as global styles (`alpha`, `linewidth`, etc.). How to
   interpret the plot is up to you. You may want to color the direction
-  differently, to show not the error's sign, but the direction to which
-  it extends. Experiment this by tweaking either the actual color value,
+  differently, to show the direction the bar extends, rather than the sign of the error.
+  Experiment with this by tweaking either the actual color value,
   or the `neg/pos` suffix.
+
+
+
+
 
 - **`orientation = "x"`** Because both axes are numeric, `ggerror` can't
   infer the direction the bar should extend, so we pass
@@ -136,12 +137,12 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
   row-indexed warning. As in `ggplot2`'s ecosystem, we would usually
   exclude invalid (missing or infinite) values before plotting. 0 is
   treated as any other value, and "draws" a bar of length zero
-  (basically, nothing). using `NA` comes in handy when we want to
+  (basically, nothing). Using `NA` comes in handy when we want to
   explicitly draw one-sided bars (see `vignette("ggerror")`).
 
 ## Summarizing raw data with `stat_error()`
 
-`stat_error()` follows ggplot2's `fun.data` - pass a summary function
+`stat_error()` follows ggplot2's `fun.data` contract: pass a summary function
 and it computes `y`, `ymin`, `ymax` per group. Regardless of the
 orientation of your plot, the summary function **must return a data
 frame with these exact column names**.
@@ -154,9 +155,7 @@ ggplot(airq, aes(Month, Temp)) +
   stat_summary(geom='point') +
   labs(title = "stat_error() with default = mean_se") 
 ```
-
-I equipped `ggerror` with two summary functions. The second one is
-`mean_ci` which computes the mean and 95% confidence interval error
+`ggerror` ships two summary functions. You just saw the default, `mean_se`. The second is `mean_ci` which computes the mean and 95% confidence interval error
 bars.
 
 ```{r stat-ci}
@@ -166,7 +165,7 @@ ggplot(airq, aes(Month, Temp)) +
 ```
 
 The `conf.int` argument controls the CI width — `0.95` by default, but
-valid probability *(0-1)* works:
+any valid probability in `(0, 1)` works:
 
 ```{r stat-conf}
 ggplot(airq, aes(Month, Temp)) +
@@ -177,7 +176,7 @@ ggplot(airq, aes(Month, Temp)) +
 ```
 
 > **Note:** I combine multiple summary geoms. `ggerror` is compatible
-> with `ggplot2` (core) and it's ecosystem.
+> with `ggplot2` (core) and its ecosystem.
 
 ### Custom summary function: median ± mean absolute deviation
 
@@ -191,6 +190,17 @@ conflicts).
 
 **median** as the center, **mean absolute deviation from the median** as
 the spread:
+
+\[
+\mathrm{md}(x) = \mathrm{median}(x), \qquad
+\mathrm{mae}(x) = \frac{1}{n}\sum_{i=1}^{n}\left|x_i - \mathrm{md}(x)\right|
+\]
+
+\[
+y = \mathrm{md}(x), \qquad
+y_{\min} = \mathrm{md}(x) - \mathrm{mae}(x), \qquad
+y_{\max} = \mathrm{md}(x) + \mathrm{mae}(x)
+\]
 
 ```{r stat-custom}
 mae_summary <- function(my_vec, scale_by = 1) {
@@ -206,25 +216,20 @@ ggplot(airq, aes(Month, Temp)) +
 ```
 
 Custom functions can take extra parameters too — `stat_error()` forwards
-any matching named arguments in the same way you are used to use the
-`...` argument. In this example, in order to multiply the error by 2,
-you'd write `stat_error(fun = mae_summary, scale_by = 2)`
+any matching named arguments in the same way you are used to using the
+`...` argument. In this example, to multiply the error by 2, you'd
+write `stat_error(fun = mae_summary, scale_by = 2)`.
 
-\> NOTE FROM HUMAN TO LLM \> If possible, add another collipsable 
-\> HUMAN NOTE \>
-I'd like to add add {r aditional-code-collapsed} as additional collapsable chunck. To avoid explosion of plots, It should be collappsed by default.
-
-Another important question: In both vignettes, I am using this syntax for reference: `vignette("vignette-name")`. Will it actually be clickable (in RStudio's help window and/or my website)?
+<details>
+<summary>Passing `scale_by = 2` to `stat_error`</summary>
 
 ```{r aditional-code-collapsed}
-
 ggplot(airq, aes(Month, Wind)) +
-  stat_error(fun = mae_summary,scale_by = 2, error_geom = "crossbar") +
+  stat_error(fun = mae_summary, scale_by = 2, error_geom = "crossbar") +
   stat_summary(geom = "point")
-
 ```
 
-\> END NOTE\>
+</details>
 
 > **Aside** — `geom_error(stat = "error", fun = ...)` is the layer-level
 > equivalent of `stat_error()`, which by default uses
