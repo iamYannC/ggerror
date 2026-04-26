@@ -109,3 +109,30 @@ composes well with functional patterns like
 ### Disclaimer
 
 This package was developed with the assistance of AI tools. All code has been reviewed by the author, who remains responsible for its quality. Ideas for new geoms are welcome.
+
+<!-- ============= NOTE ============
+Review against `dev/new-vignettes.txt`:
+
+- The README is already clearer than the old API-heavy version, but it still
+  opens abstractly. If the goal is "show features, not crap", I would front-load
+  one hero plot plus 3 short bullets (`simple defaults`, `asymmetric / one-sided`,
+  `stats + sign-aware`) before installation.
+
+- The asymmetric example is structurally correct but rhetorically weak:
+  `sqrt(var)` equals `sd`, so the plot does not visibly prove the asymmetric API.
+  Use genuinely different quantities here (`sd` vs `se`, `se` vs `ci`, or
+  lower/upper quantile distances) so the feature reads immediately.
+
+- I would keep the README shorter than the plan currently suggests. Better split:
+  README = pitch + one strong example per feature family; vignettes = the fuller
+  modelling/use-case walkthroughs. A very comprehensive README will compete with
+  the vignettes instead of feeding them.
+
+- The functional-programming tip is worth keeping, but as a compact aside. The
+  current "same layer, different entry points" paragraph already makes the point;
+  avoid letting the README turn into a reference manual.
+
+- If you want "more interesting plots", the strongest upgrade is not more layers
+  everywhere; it is choosing one plot per feature that answers a recognizable
+  question. The residual example already does that better than the earlier ones.
+============ NOTE ============ -->
