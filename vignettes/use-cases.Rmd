@@ -33,16 +33,21 @@ set_theme(
       plot.title = element_text(
         family = "mono",
         size = 11,
-        hjust = 0)
+        hjust = 0),
+      plot.caption = element_text(face = 'italic'),
+      legend.position = 'none'
       )
   )
 ```
 
-This vignette demonstrates more advanced usage of the package. For a "get-started" and overview of this package's basic usecase, see `vignette("ggerror")`.
+This vignette demonstrates more advanced usage of the package. For a
+"get-started" and overview of this package's basic usecase, see
+`vignette("ggerror")`.
 
 ## Setup
 
-We use `airquality` — Daily air quality measurements in New York, May to September 1973.
+We use `airquality` — Daily air quality measurements in New York, May to
+September 1973.
 
 This dataset has 153 rows with 6 columns: 4 continuous measurements,
 Month and Day.
@@ -58,13 +63,15 @@ airq$Day <- day_in_month(airq$Day, airq$Month, 1973)
 airq$Month <- factor(airq$Month, labels = month.abb[5:9])
 
 ```
+
 \> NOTE FROM HUMAN TO LLM: \>
 
-Style improvement: Beneath ##SETUP, add callout-info class that is collapsible, and collapsed by default, with the data info
-and more from `airquality` docs. Offer the users to expand the following
-info box for more information, or advise them to just type `?airquality`
-for more information. vignette should support collapsible HTML (it is
-rendered to a pkgdown website, im not mistaken - verify!).
+Style improvement: Beneath ##SETUP, add callout-info class that is
+collapsible, and collapsed by default, with the data info and more from
+`airquality` docs. Offer the users to expand the following info box for
+more information, or advise them to just type `?airquality` for more
+information. vignette should support collapsible HTML (it is rendered to
+a pkgdown website, im not mistaken - verify!).
 
 ALSO: for the summary function, please add valid LaTeX to show the math
 definition of these functions. IF YOU STRUGGLE WITH LATEX: leave a
@@ -196,8 +203,6 @@ ggplot(airq, aes(Month, Temp)) +
   stat_error(fun = mae_summary, error_geom = "crossbar",
              fill = "grey90") +
   labs(title = "stat_error(fun = median ± mean(|x − median|))")
-
-# What happens if you add stat_summary(geom='point')? What central measure do the points represent?
 ```
 
 Custom functions can take extra parameters too — `stat_error()` forwards
@@ -205,8 +210,12 @@ any matching named arguments in the same way you are used to use the
 `...` argument. In this example, in order to multiply the error by 2,
 you'd write `stat_error(fun = mae_summary, scale_by = 2)`
 
-\> NOTE FROM HUMAN TO LLM \>
-If possible, add another collipsable cell with this code:
+\> NOTE FROM HUMAN TO LLM \> If possible, add another collipsable 
+\> HUMAN NOTE \>
+I'd like to add add {r aditional-code-collapsed} as additional collapsable chunck. To avoid explosion of plots, It should be collappsed by default.
+
+Another important question: In both vignettes, I am using this syntax for reference: `vignette("vignette-name")`. Will it actually be clickable (in RStudio's help window and/or my website)?
+
 ```{r aditional-code-collapsed}
 
 ggplot(airq, aes(Month, Wind)) +
@@ -214,8 +223,8 @@ ggplot(airq, aes(Month, Wind)) +
   stat_summary(geom = "point")
 
 ```
-\> END NOTE\>
 
+\> END NOTE\>
 
 > **Aside** — `geom_error(stat = "error", fun = ...)` is the layer-level
 > equivalent of `stat_error()`, which by default uses
