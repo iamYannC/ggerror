@@ -111,10 +111,11 @@ ggplot(airq, aes(Month, Temp)) +
   labs(title = "stat_error() with default = mean_se") 
 ```
 
-![](use-cases_files/figure-html/stat-default-1.png)`ggerror` ships two
-summary functions. You just saw the default, `mean_se`. The second is
-`mean_ci` which computes the mean and 95% confidence interval error
-bars.
+![](use-cases_files/figure-html/stat-default-1.png)
+
+`ggerror` ships two summary functions. You just saw the default,
+`mean_se`. The second is `mean_ci` which computes the mean and 95%
+confidence interval error bars.
 
 ``` r
 ggplot(airq, aes(Month, Temp)) +
@@ -154,9 +155,7 @@ conflicts).
 **median** as the center, **mean absolute deviation from the median** as
 the spread:
 
-$${md}(x) = {median}(x),\qquad{mae}(x) = \frac{1}{n}\sum\limits_{i = 1}^{n}\left| x_{i} - {md}(x) \right|$$
-
-$$y = {md}(x),\qquad y_{\min} = {md}(x) - {mae}(x),\qquad y_{\max} = {md}(x) + {mae}(x)$$
+$${mae}(x) = \frac{1}{n}\sum\limits_{i = 1}^{n}\left| x_{i} - {md}(x) \right|$$
 
 ``` r
 mae_summary <- function(my_vec, scale_by = 1) {
