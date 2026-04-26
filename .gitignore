@@ -8,3 +8,6 @@ skills
 /Meta/
 docs
 tests/testthat/Rplots.pdf
+vignettes/*.html
+vignettes/*_files/
+vignettes/*_cache/
