@@ -4,9 +4,12 @@ output:
   rmarkdown::html_vignette:
     css: vignette.css
 vignette: >
+  %\VignetteEncoding{UTF-8}
   %\VignetteIndexEntry{Use cases: stats and residuals}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include = FALSE}
@@ -20,138 +23,200 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r imports}
+```{r viz-setup, include=FALSE}
 library(ggplot2)
 library(ggerror)
-data(CO2)
 
 set_theme(
   theme_minimal(base_size = 13) +
     theme(
-      plot.title = element_text(family = "consolas", size = 11, hjust = 0),
-      axis.title = element_blank()
-    )
-)
+      plot.title = element_text(
+        family = "mono",
+        size = 11,
+        hjust = 0)
+      )
+  )
 ```
 
-The `CO2` dataset records carbon dioxide uptake in *Echinochloa
-crus-galli* plants from Quebec and Mississippi, chilled overnight or
-not — 84 observations across 5 variables. We'll use it to show two
-end-to-end use cases: summarising raw data with `stat_error()`, and
-reading model residuals as direction-aware bars with `sign_aware`.
+This vignette demonstrates more advanced usage of the package. For a "get-started" and overview of this package's basic usecase, see `vignette("ggerror")`.
 
-## Summarising raw data with `stat_error()`
+## Setup
 
-`stat_error()` follows ggplot2's `fun.data` contract — pass a summary
-function and it computes `y`, `ymin`, `ymax` per group. The default
-is `mean_se` (mean ± one standard error):
+We use `airquality` — Daily air quality measurements in New York, May to September 1973.
 
-```{r stat-default}
-ggplot(CO2, aes(Treatment, uptake)) +
-  stat_error() +
-  labs(title = "stat_error()  # default = mean_se")
-```
+This dataset has 153 rows with 6 columns: 4 continuous measurements,
+Month and Day.
 
-Switch to a 95% confidence interval and a `pointrange` base geom:
+```{r data-prep}
 
-```{r stat-ci}
-ggplot(CO2, aes(Treatment, uptake)) +
-  stat_error(fun = "mean_ci", error_geom = "pointrange") +
-  labs(title = 'stat_error(fun = "mean_ci", error_geom = "pointrange")')
-```
-
-The `conf.int` argument controls the CI width — `0.95` by default,
-but anything in `(0, 1)` works:
-
-```{r stat-conf}
-ggplot(CO2, aes(Treatment, uptake)) +
-  stat_error(fun = "mean_ci", conf.int = 0.99,
-             error_geom = "pointrange") +
-  labs(title = 'stat_error(fun = "mean_ci", conf.int = 0.99)')
-```
-
-### Custom summary function: median ± mean absolute deviation
-
-The `fun` slot accepts any function that takes a numeric vector and
-returns a one-row data frame with `y`, `ymin`, `ymax`. Here's a
-robust dispersion summary — **median** as the centre,
-**mean absolute deviation from the median** as the spread:
-
-```{r stat-custom}
-mae_summary <- function(y) {
-  md  <- median(y)
-  mae <- mean(abs(y - md))
-  data.frame(y = md, ymin = md - mae, ymax = md + mae)
+# It wouldn't be an R workflow without minimal data cleaning...
+day_in_month <- function(day_in_month, month, year) {
+  days_abbr <- format(as.Date(sprintf("%d-%02d-%02d", year, month, day_in_month)), "%a")
+  factor(days_abbr, levels = c("Mon","Tue","Wed","Thu","Fri","Sat","Sun"), ordered = TRUE)
 }
+airq$Day <- day_in_month(airq$Day, airq$Month, 1973)
+airq$Month <- factor(airq$Month, labels = month.abb[5:9])
 
-ggplot(CO2, aes(Type, uptake)) +
-  stat_error(fun = mae_summary, error_geom = "crossbar",
-             fill = "grey90") +
-  facet_wrap(~ Treatment) +
-  labs(title = "stat_error(fun = median ± mean(|x − median|))")
 ```
+\> NOTE FROM HUMAN TO LLM: \>
 
-Custom functions can take extra parameters too — `stat_error()`
-forwards any matching named arguments via its signature-aware
-dispatcher. (For one-off knobs, just close over them; for plumbed
-arguments, name them in the function and pass at the call site.)
+Style improvement: Beneath ##SETUP, add callout-info class that is collapsible, and collapsed by default, with the data info
+and more from `airquality` docs. Offer the users to expand the following
+info box for more information, or advise them to just type `?airquality`
+for more information. vignette should support collapsible HTML (it is
+rendered to a pkgdown website, im not mistaken - verify!).
 
-> **Aside** — `geom_error(stat = "error", fun = ...)` is the
-> layer-level equivalent of `stat_error()`. Useful when you want
-> the geom call to lead and the stat to be incidental.
+ALSO: for the summary function, please add valid LaTeX to show the math
+definition of these functions. IF YOU STRUGGLE WITH LATEX: leave a
+placeholder for an image, i will take a screenshot. but prioritise to
+render this nitly with latex.
 
-## Residual diagnostics with `sign_aware`
+\> \> END NOTE
+
+Let's use it to show two use cases: Plot sign-aware residual plot and
+summarizing raw data with `stat_error()`.
+
+## Residual plot with `sign_aware`
 
 `sign_aware = TRUE` interprets the sign of `error` as direction:
-positive values extend in the positive axis direction, negative in
-the negative. That single switch turns residuals into a self-coloring
-diagnostic layer.
+positive values extend in the positive axis direction, negative in the
+negative.
 
-Fit a model and attach predictions and residuals:
+#### Let's fit a linear model and see how `Temp` can be explained by `Wind`.
 
 ```{r fit-model}
-model   <- lm(uptake ~ conc, data = CO2)
-co2_fit <- transform(CO2,
-                     predicted = predict(model),
-                     residual  = resid(model))
+model   <- lm(Temp ~ Wind, data = airq)
+airq_fit <- cbind(airquality[,c('Temp','Wind')],
+                  predicted = predict(model),
+                  residuals = resid(model)
+                 )
 ```
 
-Now plot the fitted line, the actual observations, and the residuals
-all in one layer. Each bar runs from the fitted curve up or down to
-the corresponding observation. Colour says direction:
+Let us compliment usual ggplot2's workflow for plotting residual vs true
+vales:
 
 ```{r residuals-plot, fig.height = 4.5}
-ggplot(co2_fit, aes(conc, predicted)) +
+ggplot(airq_fit, aes(x = Wind, y = predicted)) +
   geom_line(linewidth = 0.4, colour = "grey40") +
-  geom_point(aes(y = uptake), alpha = 0.5) +
-  geom_error(aes(error = residual),
+  geom_point(aes(y = Temp), alpha = 0.5) +
+  geom_error(aes(error = residuals),
              sign_aware  = TRUE,
              orientation = "x",
-             colour_pos  = "firebrick",
-             colour_neg  = "steelblue",
-             linewidth   = 0.5) +
+             color_pos  = "firebrick",
+             color_neg  = "steelblue",
+             linewidth   = 0.5,
+             alpha       = 0.85) +
   labs(title = paste(
-    "lm(uptake ~ conc) |> resid()",
-    "geom_error(error = residual, sign_aware = TRUE)",
+    "[1] residuals = resid(lm(Temp ~ Wind))",
+    "[2] geom_error(error = residuals, sign_aware = TRUE)",
     sep = "\n"
   ))
 ```
 
-**Reading it**: each red bar marks a plant whose actual uptake
-exceeded the model's prediction (under-prediction); each blue bar
-marks a plant the model over-predicted. Bar **length** is the
-residual magnitude. The clustering of same-coloured runs along
-`conc` is informative on its own — a hint of unmodeled structure.
+- **Flexible styling**: `ggerror` provides us with per-direction styling
+  (`color`) as well as global styles (`alpha`,`linewidth` etc..). How to
+  interpret the plot is up to you. You may want to color the direction
+  differently, to show not the error's sign, but the direction to which
+  it extends. Experiment this by tweaking either the actual color value,
+  or the `neg/pos` suffix.
 
-Because both axes are numeric here, `ggerror` can't infer the
-direction the bar should extend, so we pass `orientation = "x"`
-explicitly. (When one axis is discrete, orientation is inferred.)
+- **`orientation = "x"`** Because both axes are numeric, `ggerror` can't
+  infer the direction the bar should extend, so we pass
+  `orientation = "x"` (which extends the bar along the y axis)
+  explicitly. When one axis is discrete, orientation is inferred.
 
-A few diagnostic notes:
+- **NA values vs 0:** An **`NA` value** draws nothing, and triggers a
+  row-indexed warning. As in `ggplot2`'s ecosystem, we would usually
+  exclude invalid (missing or infinite) values before plotting. 0 is
+  treated as any other value, and "draws" a bar of length zero
+  (basically, nothing). using `NA` comes in handy when we want to
+  explicitly draw one-sided bars (see `vignette("ggerror")`).
 
-- A **zero residual** produces no bar — there's nothing to draw.
-- An **`NA` residual** also draws nothing, and triggers a row-indexed
-  warning so you can find the offending observation.
-- `sign_aware = TRUE` is incompatible with `stat = "error"` — the
-  stat already produces symmetric bounds. The combination errors at
-  layer construction.
+## Summarizing raw data with `stat_error()`
+
+`stat_error()` follows ggplot2's `fun.data` - pass a summary function
+and it computes `y`, `ymin`, `ymax` per group. Regardless of the
+orientation of your plot, the summary function **must return a data
+frame with these exact column names**.
+
+The default summary function is `mean_se` (mean ± one standard error):
+
+```{r stat-default}
+ggplot(airq, aes(Month, Temp)) +
+  stat_error(width = 0.2) +
+  stat_summary(geom='point') +
+  labs(title = "stat_error() with default = mean_se") 
+```
+
+I equipped `ggerror` with two summary functions. The second one is
+`mean_ci` which computes the mean and 95% confidence interval error
+bars.
+
+```{r stat-ci}
+ggplot(airq, aes(Month, Temp)) +
+  stat_error(fun = "mean_ci", error_geom = "pointrange") +
+  labs(title = 'stat_error(fun = "mean_ci", error_geom = "pointrange")')
+```
+
+The `conf.int` argument controls the CI width — `0.95` by default, but
+valid probability *(0-1)* works:
+
+```{r stat-conf}
+ggplot(airq, aes(Month, Temp)) +
+  stat_error(fun = "mean_ci", conf.int = 0.99,
+             error_geom = "linerange") + 
+  stat_summary(geom="point") +
+  labs(title = 'stat_error(fun = "mean_ci", conf.int = 0.99)')
+```
+
+> **Note:** I combine multiple summary geoms. `ggerror` is compatible
+> with `ggplot2` (core) and it's ecosystem.
+
+### Custom summary function: median ± mean absolute deviation
+
+You shall not be limited by my imagination. Create your own custom
+summary functions, as long as they obey the rules I mentioned earlier
+(returned object must be a data frame with three columns: `y`, `ymin`,
+`ymax` and one numeric row). R's `mad()` computes the median absolute
+deviation from the median. Let us use the **mean** absolute deviation
+(from the median), and call it `mae` (`e` for error, to avoid naming
+conflicts).
+
+**median** as the center, **mean absolute deviation from the median** as
+the spread:
+
+```{r stat-custom}
+mae_summary <- function(my_vec, scale_by = 1) {
+  md  <- median(my_vec)
+  mae <- mean(abs(my_vec - md)) * scale_by
+  data.frame(y = md, ymin = md - mae, ymax = md + mae)
+}
+
+ggplot(airq, aes(Month, Temp)) +
+  stat_error(fun = mae_summary, error_geom = "crossbar",
+             fill = "grey90") +
+  labs(title = "stat_error(fun = median ± mean(|x − median|))")
+
+# What happens if you add stat_summary(geom='point')? What central measure do the points represent?
+```
+
+Custom functions can take extra parameters too — `stat_error()` forwards
+any matching named arguments in the same way you are used to use the
+`...` argument. In this example, in order to multiply the error by 2,
+you'd write `stat_error(fun = mae_summary, scale_by = 2)`
+
+\> NOTE FROM HUMAN TO LLM \>
+If possible, add another collipsable cell with this code:
+```{r aditional-code-collapsed}
+
+ggplot(airq, aes(Month, Wind)) +
+  stat_error(fun = mae_summary,scale_by = 2, error_geom = "crossbar") +
+  stat_summary(geom = "point")
+
+```
+\> END NOTE\>
+
+
+> **Aside** — `geom_error(stat = "error", fun = ...)` is the layer-level
+> equivalent of `stat_error()`, which by default uses
+> `stat = "identity"`.

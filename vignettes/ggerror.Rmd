@@ -20,59 +20,65 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Why `ggerror`?
-
-Base `ggplot2` ships several error geoms, and using them means
-deciding on orientation, which axis the error follows, and how to
-wire the lower and upper bounds correctly. That overhead piles up
-fast. `ggerror` collapses it into one `error`-focused API: one
-aesthetic for symmetric, two for asymmetric, and `NA` for one-sided.
-
-This vignette walks the geom API on a single dataset. For
-`stat_error()` summaries and `sign_aware` residuals, see
-`vignette("use-cases")`.
-
-## Setup
-
-We use `CO2` — CO₂ uptake by *Echinochloa crus-galli* plants from
-Quebec and Mississippi, chilled overnight or not. A small
-pre-summary gives us per-group mean, standard deviation, and
-variance to play with.
-
-```{r imports}
+```{r viz-setup, include=FALSE}
 library(ggplot2)
 library(ggerror)
-data(CO2)
 
 set_theme(
   theme_minimal(base_size = 13) +
     theme(
-      plot.title = element_text(family = "consolas", size = 11, hjust = 0),
-      axis.title = element_blank()
-    )
-)
+      plot.title = element_text(
+        family = "mono",
+        size = 11,
+        hjust = 0)
+      )
+  )
+```
+## Why `ggerror`?
 
-co2_sum <- aggregate(uptake ~ Type + Treatment, data = CO2,
-                     FUN = function(x) c(m = mean(x), s = sd(x), v = var(x)))
-co2_sum <- do.call(data.frame, co2_sum)
-co2_sum
+`ggplot2` ships several error geoms. `ggerror` started as a wrapper to simplify their usage, by dropping `x/y`-`min/max` with a one aesthetics **`error`**.
+This doesn't just simplify the API, but it also shift the focus to the actual intention: to visualize some magnitude as error that extends from a specified value (or a central metric, more on that at `vignette("use-cases")`).
+
+`ggerror` is no longer just a wrapper, but it offers extra functionality compared to core `ggplot2`'s error geoms.
+
+This vignette demonstrates the basic usage of the package. For `stat_error()` summaries and `sign_aware` erros, see `vignette("use-cases")`.
+
+## Setup
+
+We use `airquality` — Daily air quality measurements in New York, May to September 1973.
+
+This dataset has 153 rows with 6 columns: 4 continuous measurements,
+Month and Day.
+
+```{r data-prep}
+data("airquality"); airq <- airquality
+
+# It wouldn't be an R workflow without minimal data cleaning...
+day_in_month <- function(day_in_month, month, year) {
+  days_abbr <- format(as.Date(sprintf("%d-%02d-%02d", year, month, day_in_month)), "%a")
+  factor(days_abbr, levels = c("Mon","Tue","Wed","Thu","Fri","Sat","Sun"), ordered = TRUE)
+
+}
+airq$Day <- day_in_month(airq$Day, airq$Month, 1973)
+airq$Month <- factor(airq$Month, labels = month.abb[5:9])
 ```
 
 ## Simple and defaults
 
-A single `error` aesthetic is enough — `ggerror` infers orientation
-from the data (here: numeric `uptake.m` along x, discrete `Type`
-along y) and picks `geom_errorbar` as the default base geom.
+A single `error` aesthetic is enough — `ggerror` infers orientation from the data (here: numeric x axis, discrete y axis) and picks `geom_errorbar` as the default base geom.
+
 
 ```{r simple-default}
-p <- ggplot(co2_sum, aes(uptake.m, Type, colour = Treatment)) +
-  geom_point(size = 3, position = position_dodge(0.4))
+# Subset the data to first week of May only
+may_week <- subset(airq[1:7,],airq[1:7,]$Month=='May')
 
-p +
-  geom_error(aes(error = uptake.s),
-             position = position_dodge(0.4)) +
-  labs(title = "geom_error(aes(error = uptake.s))")
+ggplot(may_week, aes(x = Temp, y = Day)) +
+  geom_point() +
+  geom_error(aes(error = sd(airq$Temp)), width = 0.2) +
+  labs(title = "ggplot(airquality, aes(x = Temp, y = Day) +\ngeom_error(error = sd(Temp))",
+       x=NULL, y=NULL)
 ```
+*I did modifiy the data a little bit to make for demo porpuses*.
 
 Same data, pinned `geom_error_pointrange()` wrapper:
 
@@ -95,25 +101,18 @@ p +
   labs(title = "geom_error(error_geom = \"linerange\")")
 ```
 
-<div class="tip">
-💡 **Tip:** Because `error_geom` is a regular argument, you can iterate
-over it functionally — useful when scanning a few presentations to
-pick one:
+::: tip
+💡 **Tip:** Because `error_geom` is a regular argument, you can iterate over it functionally — useful when scanning a few presentations to pick one:
 
 ```{r fp-tip, eval = FALSE}
 purrr::map(c("errorbar", "linerange", "crossbar", "pointrange"),
            ~ p + geom_error(aes(error = uptake.s), error_geom = .x))
 ```
-
-</div>
+:::
 
 ## Asymmetric errors
 
-`error_neg` and `error_pos` extend in opposite directions regardless
-of orientation. They're useful when the dispersion measure on each
-side carries different meaning — say, **standard deviation** on the
-low side and **standard deviation × 1.5** on the high side, or here,
-**SD** vs **√Var** as a sanity check that they're equal.
+`error_neg` and `error_pos` extend in opposite directions regardless of orientation. They're useful when the dispersion measure on each side carries different meaning — say, **standard deviation** on the low side and **standard deviation × 1.5** on the high side, or here, **SD** vs **√Var** as a sanity check that they're equal.
 
 ```{r asym-sd-vs-var}
 ggplot(co2_sum, aes(uptake.m, Type)) +
@@ -127,14 +126,9 @@ ggplot(co2_sum, aes(uptake.m, Type)) +
   labs(title = "error_neg = sd ; error_pos = sqrt(var) — by Treatment")
 ```
 
-The same pattern works for **standard error vs confidence interval**,
-**IQR halves**, or any other paired dispersion measures — swap the
-two `error_*` expressions, the rest of the call stays the same.
+The same pattern works for **standard error vs confidence interval**, **IQR halves**, or any other paired dispersion measures — swap the two `error_*` expressions, the rest of the call stays the same.
 
-Per-side styling extends to `colour`, `fill`, `linewidth`, `linetype`,
-`alpha`, and `width`. Pass either the side-specific form (`colour_neg`,
-`width_pos`) or the shared form (`colour`, `width`); side-specific
-wins.
+Per-side styling extends to `colour`, `fill`, `linewidth`, `linetype`, `alpha`, and `width`. Pass either the side-specific form (`colour_neg`, `width_pos`) or the shared form (`colour`, `width`); side-specific wins.
 
 ```{r asym-crossbar}
 ggplot(co2_sum, aes(uptake.m, Type)) +
@@ -149,10 +143,7 @@ ggplot(co2_sum, aes(uptake.m, Type)) +
 
 ## One-sided bars
 
-Suppose downstream stakeholders only care about **shortfall** —
-how far each group falls *below* its mean uptake — and treat
-overshoot as uninteresting. Set the unused side to `NA` and
-`ggerror` suppresses the cap and stem on that side automatically.
+Suppose downstream stakeholders only care about **shortfall** — how far each group falls *below* its mean uptake — and treat overshoot as uninteresting. Set the unused side to `NA` and `ggerror` suppresses the cap and stem on that side automatically.
 
 ```{r one-sided-basic}
 ggplot(co2_sum, aes(uptake.m, Type, colour = Treatment)) +
@@ -163,8 +154,7 @@ ggplot(co2_sum, aes(uptake.m, Type, colour = Treatment)) +
   labs(title = "downside only — error_pos = NA")
 ```
 
-A linerange variant — heavier line, no caps — reads cleanly when
-overlaid on raw points:
+A linerange variant — heavier line, no caps — reads cleanly when overlaid on raw points:
 
 ```{r one-sided-linerange}
 ggplot(CO2, aes(uptake, Type)) +
@@ -191,10 +181,42 @@ ggplot(co2_sum, aes(uptake.m, Type)) +
   labs(title = "pointrange one-sided")
 ```
 
-> Passing `0` instead of `NA` still works for backward compatibility
-> but is soft-deprecated and will warn.
+> Passing `0` instead of `NA` still works for backward compatibility but is soft-deprecated and will warn.
 
 ## Extending ggerror
 
-If you know of, or need, a new error geom, please open an issue on the [GitHub repository](https://github.com/iamyannc/ggerror/issues).
-My first motiviation was to simplify the heck out of the error geoms, reducing the aesthetics to a single `error` aesthetic. The rest (asymmetric, one-sided, etc) are just niceties that I added along the way.
+If you know of, or need, a new error geom, please open an issue on the [GitHub repository](https://github.com/iamyannc/ggerror/issues). My first motiviation was to simplify the heck out of the error geoms, reducing the aesthetics to a single `error` aesthetic. The rest (asymmetric, one-sided, etc) are just niceties that I added along the way.
+
+```{=html}
+<!-- ============= NOTE ============
+Review against `dev/new-vignettes.txt`:
+
+- This vignette is coherent, but it still reads more like an API tour than a
+  use-case document. If that is intentional, keep it as the "geom API" vignette
+  and let `use-cases.Rmd` carry the modelling narrative. If not, compress the
+  exposition and make each section answer a concrete question.
+
+- The "Simple and defaults" section is the strongest part: it proves the default
+  behaviour, then shows pinned wrapper vs `error_geom` cleanly. I would keep this
+  structure.
+
+- The asymmetric section needs a different example. `error_neg = sd` and
+  `error_pos = sqrt(var)` are mathematically the same, so the plot does not
+  actually show asymmetry. Replace with a pair that produces visibly different
+  sides (`sd` vs `se`, `se` vs `ci`, quantile distances, etc.).
+
+- The one-sided section currently gives 3 variants. That is useful for drafting,
+  but probably 1 main plot plus 1 optional alternative is enough for the final
+  vignette. Otherwise the section starts to feel like a gallery instead of a
+  guided story.
+
+- The plan mentions showing actual code in titles / annotations. You are already
+  doing some of that with `labs(title = ...)`; if you continue, be selective.
+  Too much inline code in titles will make these plots feel like screenshots of
+  syntax rather than explanations.
+
+- Minor portability point: `family = "consolas"` is Windows-specific enough that
+  I would either drop it or switch to a generic `family = "mono"` if you want a
+  code-like title face in rendered vignettes.
+============ NOTE ============ -->
+```
