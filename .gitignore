@@ -1,6 +1,8 @@
 dev/
 .agents/
 .claude/
+.codex
+.Rhistory
 skills
 /doc/
 /Meta/
