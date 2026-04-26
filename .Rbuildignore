@@ -8,3 +8,5 @@
 ^docs$
 ^pkgdown$
 ^\.github$
+^README\.qmd$
+^README_files$
