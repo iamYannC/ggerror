@@ -37,13 +37,7 @@ set_theme(
   )
 ```
 
-## Why `ggerror`?
-
-`ggplot2` ships several error geoms. `ggerror` started as a wrapper to simplify their usage by replacing the `x/y`-`min/max` inputs with one aesthetic: **`error`**. This doesn't just simplify the API, it also shifts the focus to the actual intention: to visualize some magnitude as error that extends from a specified value (or a central metric; more on that in `vignette("use-cases")`).
-
-`ggerror` is no longer just a wrapper; it offers extra functionality compared to `ggplot2`'s core error geoms.
-
-This vignette demonstrates the basic usage of the package. For `stat_error()` summaries and `sign_aware` errors, see `vignette("use-cases")`.
+This vignette demonstrates the geom API on symmetric, asymmetric, and one-sided errors. For the package motivation see the [README](https://iamyannc.github.io/ggerror/); for `stat_error()` summaries and `sign_aware` errors see `vignette("use-cases")`.
 
 ## Setup
 
