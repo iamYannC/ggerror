@@ -13,22 +13,16 @@ knitr:
 
 # ggerror <img src="man/figures/logo.png" alt="ggerror hex logo" align="right" height="150"/>
 
-[![CRAN-status](https://www.r-pkg.org/badges/version/ggerror)](https://CRAN.R-project.org/package=ggerror)
-[![R-CMD-check](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml)
-[![Codecov-coverage](https://codecov.io/gh/iamYannC/ggerror/graph/badge.svg)](https://app.codecov.io/gh/iamYannC/ggerror)
+[![CRAN-status](https://www.r-pkg.org/badges/version/ggerror?cache=1
+)](https://CRAN.R-project.org/package=ggerror) [![R-CMD-check](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml) [![Codecov-coverage](https://codecov.io/gh/iamYannC/ggerror/graph/badge.svg)](https://app.codecov.io/gh/iamYannC/ggerror)
 
-`ggerror` extends `ggplot2`'s error geoms with one error-focused API.
-Pass `error` for symmetric errors, or `error_neg` and `error_pos` for
-asymmetric and one-sided cases. `ggerror` infers orientation and lets you style each side independently.
-It computes summaries from raw data with `stat_error()`, and draws signed
-quantities such as residuals with `sign_aware`.
+`ggerror` extends `ggplot2`'s error geoms with one error-focused API. Pass `error` for symmetric errors, or `error_neg` and `error_pos` for asymmetric and one-sided cases. `ggerror` infers orientation and lets you style each side independently. It computes summaries from raw data with `stat_error()`, and draws signed quantities such as residuals with `sign_aware`.
 
 TL;DR:
 
 - One aesthetic for the common symmetric case: `aes(error = ...)`
 - Asymmetric and one-sided bars with `error_neg` and `error_pos`
-- Per-side styling through `colour_neg`, `width_pos`, `linetype_neg`,
-  and more
+- Per-side styling through `colour_neg`, `width_pos`, `linetype_neg`, and more
 - Choice of `errorbar`, `linerange`, `crossbar`, or `pointrange`
 - Summary layers from raw data with `stat_error()`
 - Signed residual-style bars with `sign_aware = TRUE`
@@ -46,9 +40,7 @@ pak::pak("iamyannc/ggerror") # 1.0.0
 
 ## Setup
 
-The examples below use `airquality`, the same dataset used throughout
-the package vignettes. For convenience I defined a theme, and did
-minimal data processing on the original dataset.
+The examples below use `airquality`, the same dataset used throughout the package vignettes. For convenience I defined a theme, and did minimal data processing on the original dataset.
 
 ```{r defaults}
 library(ggplot2)
@@ -107,9 +99,7 @@ ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   )
 ```
 
-If you want a specific error geom (4 available, [see
-below](#supported-geoms)), either pick it with `error_geom = ...` or use
-the pinned wrappers.
+If you want a specific error geom (4 available, [see below](#supported-geoms)), either pick it with `error_geom = ...` or use the pinned wrappers.
 
 ```{r pointrange-wrapper}
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
@@ -119,9 +109,7 @@ ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
 
 ## Asymmetric and one-sided errors
 
-`error_neg` and `error_pos` extend in opposite directions. That makes it
-easy to show genuinely different quantities on each side, or to suppress
-one side entirely with `NA`.
+`error_neg` and `error_pos` extend in opposite directions. That makes it easy to show genuinely different quantities on each side, or to suppress one side entirely with `NA`.
 
 ```{r assym-plot}
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
@@ -155,8 +143,7 @@ ggplot(week_may, aes(Temp, Day)) +
 
 ## Summaries from raw data with `stat_error()`
 
-When you do not want to pre-compute the bounds yourself, `stat_error()`
-computes them directly and supports default and custom functions.
+When you do not want to pre-compute the bounds yourself, `stat_error()` computes them directly and supports default and custom functions.
 
 ```{r error-summary-plot}
 ggplot(aq, aes(Month, Temp)) +
@@ -166,8 +153,7 @@ ggplot(aq, aes(Month, Temp)) +
 # [1] `stat_error()` using fun = "mean_ci" and conf.int = 0.95.
 ```
 
-Custom summary functions work too, as long as they return data frames of
-one row with `y`, `ymin`, and `ymax` columns:
+Custom summary functions work too, as long as they return data frames of one row with `y`, `ymin`, and `ymax` columns:
 
 ```{r custom-summary-plot}
 mae_summary <- function(x, scale_by = 1) {
@@ -183,8 +169,7 @@ ggplot(aq, aes(Month, Temp)) +
 
 ## Signed quantities with `sign_aware`
 
-For residual plots and other signed magnitudes, `sign_aware = TRUE`
-assigns positive and negative values automatically:
+For residual plots and other signed magnitudes, `sign_aware = TRUE` assigns positive and negative values automatically:
 
 ```{r residual-plot}
 
@@ -224,21 +209,15 @@ ggplot(aq_fit, aes(Wind, fitted)) +
 
 ## Learn more
 
-I tried to be as comprehensive as possible, without taking too much of
-your attention. For the full walkthroughs, see the package vignettes:
+I tried to be as comprehensive as possible, without taking too much of your attention. For the full walkthroughs, see the package vignettes:
 
-- `vignette("ggerror")`: simple defaults, asymmetric bars, one-sided
-  bars
-- `vignette("use-cases")`: `stat_error()`, custom summaries, and
-  `sign_aware`
+- `vignette("ggerror")`: simple defaults, asymmetric bars, one-sided bars
+- `vignette("use-cases")`: `stat_error()`, custom summaries, and `sign_aware`
 
 ## Disclaimer
 
-This package was developed with the assistance of AI tools. All code has
-been reviewed by the author, who remains responsible for its quality.
-Ideas for new geoms are welcome and features are very welcome.
+This package was developed with the assistance of AI tools. All code has been reviewed by the author, who remains responsible for its quality. Ideas for new geoms are welcome and features are very welcome.
 
-Thank you for reading, forget everything and give me your best cookies
-recipe 🍪
+Thank you for reading, forget everything and give me your best cookies recipe 🍪
 
 Yann :)
