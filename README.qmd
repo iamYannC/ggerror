@@ -1,19 +1,29 @@
-
+---
+format: gfm
+execute:
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
+    fig.path: "man/figures/README-"
+---
 
 # ggerror <img src="man/figures/logo.png" alt="ggerror hex logo" align="right" height="150"/>
 
 [![CRAN
-status](https://www.r-pkg.org/badges/version/ggerror.png)](https://CRAN.R-project.org/package=ggerror)
+status](https://www.r-pkg.org/badges/version/ggerror)](https://CRAN.R-project.org/package=ggerror)
 [![R-CMD-check](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/iamYannC/ggerror/graph/badge.svg)](https://app.codecov.io/gh/iamYannC/ggerror)
 
-`ggerror` extends `ggplot2`’s error geoms with one error-focused API.
+`ggerror` extends `ggplot2`'s error geoms with one error-focused API.
 Pass `error` for symmetric errors, or `error_neg` and `error_pos` for
-asymmetric and one-sided cases. `ggerror` infers orientation and lets
-you style each side independently. It computes summaries from raw data
-with `stat_error()`, and draws signed quantities such as residuals with
-`sign_aware`.
+asymmetric and one-sided cases. `ggerror` infers orientation and lets you style each side independently.
+It computes summaries from raw data with `stat_error()`, and draws signed
+quantities such as residuals with `sign_aware`.
 
 TL;DR:
 
@@ -27,7 +37,8 @@ TL;DR:
 
 ## Installation
 
-``` r
+```{r}
+#| eval: false
 # Install the stable release from CRAN:
 install.packages("ggerror") # 0.3.0
 
@@ -41,7 +52,7 @@ The examples below use `airquality`, the same dataset used throughout
 the package vignettes. For convenience I defined a theme, and did
 minimal data processing on the original dataset.
 
-``` r
+```{r defaults}
 library(ggplot2)
 library(ggerror)
 
@@ -88,7 +99,7 @@ aq_monthly_avg <- do.call(data.frame, aq_monthly_avg)
 
 The usual case is a symmetric error around some central value.
 
-``` r
+```{r default-plot}
 
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   geom_error(aes(error = Temp.sd), width = 0.4) +
@@ -98,19 +109,15 @@ ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   )
 ```
 
-![](man/figures/README-default-plot-1.png)
-
 If you want a specific error geom (4 available, [see
 below](#supported-geoms)), either pick it with `error_geom = ...` or use
 the pinned wrappers.
 
-``` r
+```{r pointrange-wrapper}
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   geom_error_pointrange(aes(error = Temp.sd), size = 0.7) +
   labs(title = "geom_error_pointrange(aes(error = Temp.sd))")
 ```
-
-![](man/figures/README-pointrange-wrapper-1.png)
 
 ## Asymmetric and one-sided errors
 
@@ -118,7 +125,7 @@ ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
 easy to show genuinely different quantities on each side, or to suppress
 one side entirely with `NA`.
 
-``` r
+```{r assym-plot}
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   geom_error(
     aes(error_neg = Temp.se, error_pos = Temp.sd),
@@ -131,9 +138,7 @@ ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   labs(title = "error_neg = Temp.se ; error_pos = Temp.sd")
 ```
 
-![](man/figures/README-assym-plot-1.png)
-
-``` r
+```{r one-side-plot}
 
 # Grabbing only the first week in the data and computing for each Temp, its distance from the minimum Temp and maximum Temp.
 week_may <- subset(aq, Month == "May")[1:7, ]
@@ -150,22 +155,15 @@ ggplot(week_may, aes(Temp, Day)) +
   labs(title = "One-sided: error_pos = NA")
 ```
 
-![](man/figures/README-one-side-plot-1.png)
-
 ## Summaries from raw data with `stat_error()`
 
 When you do not want to pre-compute the bounds yourself, `stat_error()`
 computes them directly and supports default and custom functions.
 
-``` r
+```{r error-summary-plot}
 ggplot(aq, aes(Month, Temp)) +
   stat_error(fun = "mean_ci", error_geom = "pointrange") +
   labs(title = 'stat_error(fun = "mean_ci", error_geom = "pointrange")')
-```
-
-![](man/figures/README-error-summary-plot-1.png)
-
-``` r
 
 # [1] `stat_error()` using fun = "mean_ci" and conf.int = 0.95.
 ```
@@ -173,7 +171,7 @@ ggplot(aq, aes(Month, Temp)) +
 Custom summary functions work too, as long as they return data frames of
 one row with `y`, `ymin`, and `ymax` columns:
 
-``` r
+```{r custom-summary-plot}
 mae_summary <- function(x, scale_by = 1) {
   md <- median(x)
   mae <- mean(abs(x - md)) * scale_by
@@ -185,14 +183,12 @@ ggplot(aq, aes(Month, Temp)) +
   labs(title = "stat_error(fun = mae_summary, error_geom = \"crossbar\")")
 ```
 
-![](man/figures/README-custom-summary-plot-1.png)
-
 ## Signed quantities with `sign_aware`
 
 For residual plots and other signed magnitudes, `sign_aware = TRUE`
 assigns positive and negative values automatically:
 
-``` r
+```{r residual-plot}
 
 # Residual plot made easy
 
@@ -219,12 +215,10 @@ ggplot(aq_fit, aes(Wind, fitted)) +
   labs(title = "geom_error(aes(error = residual), sign_aware = TRUE)")
 ```
 
-![](man/figures/README-residual-plot-1.png)
-
-## Supported geoms
+## Supported geoms {#supported-geoms}
 
 | ggplot2 base      | `geom_error(error_geom = ...)` | Pinned wrapper            |
-|:------------------|:-------------------------------|:--------------------------|
+|:------------------|:---------------------------|:------------------------|
 | `geom_errorbar`   | `"errorbar"` (default)         | `geom_error()`            |
 | `geom_linerange`  | `"linerange"`                  | `geom_error_linerange()`  |
 | `geom_pointrange` | `"pointrange"`                 | `geom_error_pointrange()` |
