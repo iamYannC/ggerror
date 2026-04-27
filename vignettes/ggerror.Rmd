@@ -126,6 +126,22 @@ may_summary <- data.frame(
   # dataset, and its distance from the maximum Temp in the dataset.
 
 ```
+:::
+
+## Asymmetric errors
+
+`error_neg` and `error_pos` extend in opposite directions regardless of orientation. They're useful when the dispersion measure on each side carries different meaning.
+
+```{r asym-prep-plot}
+may_week <- subset(airq[1:7,], Month == 'May')
+
+may_summary <- data.frame(
+  Day = may_week$Day,
+  Temp = may_week$Temp,
+  dist2min = may_week$Temp - min(may_week$Temp, na.rm = TRUE),
+  dist2max = max(may_week$Temp, na.rm = TRUE) - may_week$Temp
+) # Each Temp point now has its distance from the minimum Temp in the
+  # dataset, and its distance from the maximum Temp in the dataset.
 
 ```{r asym-sd-vs-var}
 

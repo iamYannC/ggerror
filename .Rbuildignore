@@ -12,3 +12,4 @@
 ^README_files$
 ^\.quarto$
 ^man/figures/README-
+^codecov\.yml$

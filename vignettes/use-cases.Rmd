@@ -86,7 +86,7 @@ and summarizing raw data with `stat_error()`.
 positive values extend in the positive axis direction, negative in the
 negative.
 
-#### Let's fit a linear model and see how `Temp` can be explained by `Wind`.
+### Let's fit a linear model and see how `Temp` can be explained by `Wind`.
 
 ```{r fit-model}
 model   <- lm(Temp ~ Wind, data = airq)
@@ -118,15 +118,11 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
 ```
 
 - **Flexible styling**: `ggerror` provides us with per-direction styling
-  (`color`) as well as global styles (`alpha`, `linewidth`, etc.). How to
-  interpret the plot is up to you. You may want to color the direction
-  differently, to show the direction the bar extends, rather than the sign of the error.
-  Experiment with this by tweaking either the actual color value,
-  or the `neg/pos` suffix.
-
-
-
-
+  (`color`) as well as global styles (`alpha`, `linewidth`, etc.). How
+  to interpret the plot is up to you. You may want to color the
+  direction differently, to show the direction the bar extends, rather
+  than the sign of the error. Experiment with this by tweaking either
+  the actual color value, or the `neg/pos` suffix.
 
 - **`orientation = "x"`** Because both axes are numeric, `ggerror` can't
   infer the direction the bar should extend, so we pass
@@ -142,7 +138,7 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
 
 ## Summarizing raw data with `stat_error()`
 
-`stat_error()` follows ggplot2's `fun.data` contract: pass a summary function
+`stat_error()` follows ggplot2's `fun.data` logic: pass a summary function
 and it computes `y`, `ymin`, `ymax` per group. Regardless of the
 orientation of your plot, the summary function **must return a data
 frame with these exact column names**.
@@ -191,16 +187,7 @@ conflicts).
 **median** as the center, **mean absolute deviation from the median** as
 the spread:
 
-\[
-\mathrm{md}(x) = \mathrm{median}(x), \qquad
-\mathrm{mae}(x) = \frac{1}{n}\sum_{i=1}^{n}\left|x_i - \mathrm{md}(x)\right|
-\]
-
-\[
-y = \mathrm{md}(x), \qquad
-y_{\min} = \mathrm{md}(x) - \mathrm{mae}(x), \qquad
-y_{\max} = \mathrm{md}(x) + \mathrm{mae}(x)
-\]
+$$\mathrm{mae}(x) = \frac{1}{n}\sum_{i=1}^{n}\left|x_i - \mathrm{md}(x)\right|$$
 
 ```{r stat-custom}
 mae_summary <- function(my_vec, scale_by = 1) {
