@@ -66,15 +66,13 @@ airq$Month <- factor(airq$Month, labels = month.abb[5:9])
 ```
 
 <details>
-
-<summary>More on <code>airquality</code> (click to expand, or type
-<code>?airquality</code>)</summary>
+<summary>More on <code>airquality</code> (click to expand, or type <code>?airquality</code>)</summary>
 
 ::: {.alert .alert-info}
 `airquality` contains daily New York air-quality measurements from May
-to September 1973. The main continuous variables are `Ozone`, `Solar.R`,
-`Wind`, and `Temp`; `Month` and `Day` identify when each measurement was
-taken.
+to September 1973. The main continuous variables are `Ozone`,
+`Solar.R`, `Wind`, and `Temp`; `Month` and `Day` identify when each
+measurement was taken.
 :::
 
 </details>
@@ -140,9 +138,9 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
 
 ## Summarizing raw data with `stat_error()`
 
-`stat_error()` follows ggplot2's `fun.data` contract: pass a summary
-function and it computes `y`, `ymin`, `ymax` per group. Regardless of
-the orientation of your plot, the summary function **must return a data
+`stat_error()` follows ggplot2's `fun.data` logic: pass a summary function
+and it computes `y`, `ymin`, `ymax` per group. Regardless of the
+orientation of your plot, the summary function **must return a data
 frame with these exact column names**.
 
 The default summary function is `mean_se` (mean ± one standard error):
@@ -153,10 +151,8 @@ ggplot(airq, aes(Month, Temp)) +
   stat_summary(geom='point') +
   labs(title = "stat_error() with default = mean_se") 
 ```
-
-`ggerror` ships two summary functions. You just saw the default,
-`mean_se`. The second is `mean_ci` which computes the mean and 95%
-confidence interval error bars.
+`ggerror` ships two summary functions. You just saw the default, `mean_se`. The second is `mean_ci` which computes the mean and 95% confidence interval error
+bars.
 
 ```{r stat-ci}
 ggplot(airq, aes(Month, Temp)) +
@@ -208,15 +204,14 @@ ggplot(airq, aes(Month, Temp)) +
 
 Custom functions can take extra parameters too — `stat_error()` forwards
 any matching named arguments in the same way you are used to using the
-`...` argument. In this example, to multiply the error by 2, you'd write
-`stat_error(fun = mae_summary, scale_by = 2)`.
+`...` argument. In this example, to multiply the error by 2, you'd
+write `stat_error(fun = mae_summary, scale_by = 2)`.
 
 <details>
-
 <summary>Passing `scale_by = 2` to `stat_error`</summary>
 
 ```{r aditional-code-collapsed}
-ggplot(airq, aes(Month, Temp)) +
+ggplot(airq, aes(Month, Wind)) +
   stat_error(fun = mae_summary, scale_by = 2, error_geom = "crossbar") +
   stat_summary(geom = "point")
 ```

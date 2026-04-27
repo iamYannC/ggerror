@@ -37,13 +37,7 @@ set_theme(
   )
 ```
 
-## Why `ggerror`?
-
-`ggplot2` ships several error geoms. `ggerror` started as a wrapper to simplify their usage by replacing the `x/y`-`min/max` inputs with one aesthetic: **`error`**. This doesn't just simplify the API, it also shifts the focus to the actual intention: to visualize some magnitude as error that extends from a specified value (or a central metric; more on that in `vignette("use-cases")`).
-
-`ggerror` is no longer just a wrapper; it offers extra functionality compared to `ggplot2`'s core error geoms.
-
-This vignette demonstrates the basic usage of the package. For `stat_error()` summaries and `sign_aware` errors, see `vignette("use-cases")`.
+This vignette demonstrates the geom API on symmetric, asymmetric, and one-sided errors. For the package motivation see the [README](https://iamyannc.github.io/ggerror/); for `stat_error()` summaries and `sign_aware` errors see `vignette("use-cases")`.
 
 ## Setup
 
@@ -132,6 +126,22 @@ may_summary <- data.frame(
   # dataset, and its distance from the maximum Temp in the dataset.
 
 ```
+:::
+
+## Asymmetric errors
+
+`error_neg` and `error_pos` extend in opposite directions regardless of orientation. They're useful when the dispersion measure on each side carries different meaning.
+
+```{r asym-prep-plot}
+may_week <- subset(airq[1:7,], Month == 'May')
+
+may_summary <- data.frame(
+  Day = may_week$Day,
+  Temp = may_week$Temp,
+  dist2min = may_week$Temp - min(may_week$Temp, na.rm = TRUE),
+  dist2max = max(may_week$Temp, na.rm = TRUE) - may_week$Temp
+) # Each Temp point now has its distance from the minimum Temp in the
+  # dataset, and its distance from the maximum Temp in the dataset.
 
 ```{r asym-sd-vs-var}
 
