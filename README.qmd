@@ -17,7 +17,7 @@ knitr:
 
 `ggerror` extends `ggplot2`'s error geoms with one error-focused API. Pass `error` for symmetric errors, or `error_neg` and `error_pos` for asymmetric and one-sided cases. `ggerror` infers orientation and lets you style each side independently. It computes summaries from raw data with `stat_error()`, and draws signed quantities such as residuals with `sign_aware`.
 
-TL;DR:
+## TL;DR
 
 - One aesthetic for the common symmetric case: `aes(error = ...)`
 - Asymmetric and one-sided bars with `error_neg` and `error_pos`
@@ -200,7 +200,7 @@ ggplot(aq_fit, aes(Wind, fitted)) +
 ## Supported geoms {#supported-geoms}
 
 | ggplot2 base      | `geom_error(error_geom = ...)` | Pinned wrapper            |
-|:------------------|:-------------------------------|:--------------------------|
+|:------------------|:---------------------------|:------------------------|
 | `geom_errorbar`   | `"errorbar"` (default)         | `geom_error()`            |
 | `geom_linerange`  | `"linerange"`                  | `geom_error_linerange()`  |
 | `geom_pointrange` | `"pointrange"`                 | `geom_error_pointrange()` |
