@@ -3,12 +3,12 @@ dev/
 .claude/
 .codex
 .Rhistory
+.quarto/
 skills
 /doc/
 /Meta/
 docs
 tests/testthat/Rplots.pdf
-README.qmd
 README_files/
 vignettes/*.html
 vignettes/*_files/

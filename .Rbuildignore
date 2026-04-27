@@ -10,3 +10,5 @@
 ^\.github$
 ^README\.qmd$
 ^README_files$
+^\.quarto$
+^man/figures/README-
