@@ -1,6 +1,6 @@
 # ggerror
 
-[![CRAN-status](https://www.r-pkg.org/badges/version/ggerror.png)](https://CRAN.R-project.org/package=ggerror)
+[![CRAN-status](https://www.r-pkg.org/badges/version/ggerror?cache=1.png)](https://CRAN.R-project.org/package=ggerror)
 [![R-CMD-check](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/iamYannC/ggerror/actions/workflows/R-CMD-check.yaml)
 [![Codecov-coverage](https://codecov.io/gh/iamYannC/ggerror/graph/badge.svg)](https://app.codecov.io/gh/iamYannC/ggerror)
 
