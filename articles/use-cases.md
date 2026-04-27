@@ -97,7 +97,7 @@ ggplot(airq_fit, aes(x = Wind, y = predicted)) +
 ## Summarizing raw data with `stat_error()`
 
 [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
-follows ggplot2’s `fun.data` contract: pass a summary function and it
+follows ggplot2’s `fun.data` logic: pass a summary function and it
 computes `y`, `ymin`, `ymax` per group. Regardless of the orientation of
 your plot, the summary function **must return a data frame with these
 exact column names**.
@@ -111,11 +111,10 @@ ggplot(airq, aes(Month, Temp)) +
   labs(title = "stat_error() with default = mean_se") 
 ```
 
-![](use-cases_files/figure-html/stat-default-1.png)
-
-`ggerror` ships two summary functions. You just saw the default,
-`mean_se`. The second is `mean_ci` which computes the mean and 95%
-confidence interval error bars.
+![](use-cases_files/figure-html/stat-default-1.png)`ggerror` ships two
+summary functions. You just saw the default, `mean_se`. The second is
+`mean_ci` which computes the mean and 95% confidence interval error
+bars.
 
 ``` r
 ggplot(airq, aes(Month, Temp)) +
@@ -181,7 +180,7 @@ you’d write `stat_error(fun = mae_summary, scale_by = 2)`.
 Passing `scale_by = 2` to `stat_error`
 
 ``` r
-ggplot(airq, aes(Month, Temp)) +
+ggplot(airq, aes(Month, Wind)) +
   stat_error(fun = mae_summary, scale_by = 2, error_geom = "crossbar") +
   stat_summary(geom = "point")
 ```

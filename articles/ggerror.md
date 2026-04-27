@@ -1,21 +1,10 @@
 # Using ggerror
 
-## Why `ggerror`?
-
-`ggplot2` ships several error geoms. `ggerror` started as a wrapper to
-simplify their usage by replacing the `x/y`-`min/max` inputs with one
-aesthetic: **`error`**. This doesn’t just simplify the API, it also
-shifts the focus to the actual intention: to visualize some magnitude as
-error that extends from a specified value (or a central metric; more on
-that in
-[`vignette("use-cases")`](https://iamyannc.github.io/ggerror/articles/use-cases.md)).
-
-`ggerror` is no longer just a wrapper; it offers extra functionality
-compared to `ggplot2`’s core error geoms.
-
-This vignette demonstrates the basic usage of the package. For
+This vignette demonstrates the geom API on symmetric, asymmetric, and
+one-sided errors. For the package motivation see the
+[README](https://iamyannc.github.io/ggerror/); for
 [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
-summaries and `sign_aware` errors, see
+summaries and `sign_aware` errors see
 [`vignette("use-cases")`](https://iamyannc.github.io/ggerror/articles/use-cases.md).
 
 ## Setup
@@ -118,6 +107,8 @@ may_summary <- data.frame(
   # dataset, and its distance from the maximum Temp in the dataset.
 ```
 
+:::
+
 ``` r
 
 ggplot(may_summary, aes(x = Temp, y = Day)) +
@@ -131,7 +122,7 @@ ggplot(may_summary, aes(x = Temp, y = Day)) +
   labs(title = "geom_error(error_neg = dist2min, error_pos = dist2max)")
 ```
 
-![](ggerror_files/figure-html/asym-sd-vs-var-1.png)
+![](ggerror_files/figure-html/asym-dist2minmax-1.png)
 
 Deciding what counts as the negative or the positive error is up to your
 discretion.

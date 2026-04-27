@@ -71,22 +71,10 @@
 
     
     
-<div class="section level2">
-<h2 id="why-ggerror">Why <code>ggerror</code>?<a class="anchor" aria-label="anchor" href="#why-ggerror"></a>
-</h2>
-<p><code>ggplot2</code> ships several error geoms. <code>ggerror</code>
-started as a wrapper to simplify their usage by replacing the
-<code>x/y</code>-<code>min/max</code> inputs with one aesthetic:
-<strong><code>error</code></strong>. This doesn’t just simplify the API,
-it also shifts the focus to the actual intention: to visualize some
-magnitude as error that extends from a specified value (or a central
-metric; more on that in <code><a href="../articles/use-cases.html">vignette("use-cases")</a></code>).</p>
-<p><code>ggerror</code> is no longer just a wrapper; it offers extra
-functionality compared to <code>ggplot2</code>’s core error geoms.</p>
-<p>This vignette demonstrates the basic usage of the package. For
-<code><a href="../reference/stat_error.html">stat_error()</a></code> summaries and <code>sign_aware</code> errors,
+<p>This vignette demonstrates the geom API on symmetric, asymmetric, and
+one-sided errors. For the package motivation see the <a href="https://iamyannc.github.io/ggerror/">README</a>; for
+<code><a href="../reference/stat_error.html">stat_error()</a></code> summaries and <code>sign_aware</code> errors
 see <code><a href="../articles/use-cases.html">vignette("use-cases")</a></code>.</p>
-</div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
@@ -171,6 +159,7 @@ measure on each side carries different meaning.</p>
 <span>  dist2max <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">may_week</span><span class="op">$</span><span class="va">Temp</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">-</span> <span class="va">may_week</span><span class="op">$</span><span class="va">Temp</span></span>
 <span><span class="op">)</span> <span class="co"># Each Temp point now has its distance from the minimum Temp in the</span></span>
 <span>  <span class="co"># dataset, and its distance from the maximum Temp in the dataset.</span></span></code></pre></div>
+<p>:::</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">may_summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Temp</span>, y <span class="op">=</span> <span class="va">Day</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -182,7 +171,7 @@ measure on each side carries different meaning.</p>
 <span>             linewidth  <span class="op">=</span> <span class="fl">1</span></span>
 <span>             <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"geom_error(error_neg = dist2min, error_pos = dist2max)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="ggerror_files/figure-html/asym-sd-vs-var-1.png" class="r-plt" alt="" width="576"></p>
+<p><img src="ggerror_files/figure-html/asym-dist2minmax-1.png" class="r-plt" alt="" width="576"></p>
 <p>Deciding what counts as the negative or the positive error is up to
 your discretion.</p>
 <p>Per-side styling extends to <code>color</code>, <code>fill</code>,
