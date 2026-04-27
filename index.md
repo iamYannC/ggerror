@@ -12,7 +12,7 @@ with
 [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md),
 and draws signed quantities such as residuals with `sign_aware`.
 
-TL;DR:
+## TL;DR
 
 - One aesthetic for the common symmetric case: `aes(error = ...)`
 - Asymmetric and one-sided bars with `error_neg` and `error_pos`
