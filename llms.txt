@@ -236,9 +236,9 @@ ggplot(aq_fit, aes(Wind, fitted)) +
 I tried to be as comprehensive as possible, without taking too much of
 your attention. For the full walkthroughs, see the package vignettes:
 
-- [`vignette("ggerror")`](https://iamyannc.github.io/ggerror/articles/ggerror.md):
+- [`vignette("ggerror")`](https://iamyannc.github.io/ggerror/articles/ggerror.html):
   simple defaults, asymmetric bars, one-sided bars
-- [`vignette("use-cases")`](https://iamyannc.github.io/ggerror/articles/use-cases.md):
+- [`vignette("use-cases")`](https://iamyannc.github.io/ggerror/articles/use-cases.html):
   [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md),
   custom summaries, and `sign_aware`
 
