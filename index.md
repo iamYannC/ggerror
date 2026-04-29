@@ -39,6 +39,8 @@ The examples below use `airquality`, the same dataset used throughout
 the package vignettes. For convenience I defined a theme, and did
 minimal data processing on the original dataset.
 
+defaults and data prep
+
 ``` r
 library(ggplot2)
 library(ggerror)

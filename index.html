@@ -98,7 +98,9 @@
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
 <p>The examples below use <code>airquality</code>, the same dataset used throughout the package vignettes. For convenience I defined a theme, and did minimal data processing on the original dataset.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<details class="code-fold"><summary>
+defaults and data prep
+</summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://iamyannc.github.io/ggerror/">ggerror</a></span><span class="op">)</span></span>
 <span></span>
@@ -139,6 +141,7 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">aq_monthly_avg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">data.frame</span>, <span class="va">aq_monthly_avg</span><span class="op">)</span></span></code></pre></div>
+</details>
 </div>
 <div class="section level2">
 <h2 id="simple-defaults">Simple defaults<a class="anchor" aria-label="anchor" href="#simple-defaults"></a>
