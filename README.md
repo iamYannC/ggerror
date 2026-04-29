@@ -39,6 +39,9 @@ The examples below use `airquality`, the same dataset used throughout
 the package vignettes. For convenience I defined a theme, and did
 minimal data processing on the original dataset.
 
+<details class="code-fold">
+<summary>defaults and data prep</summary>
+
 ``` r
 library(ggplot2)
 library(ggerror)
@@ -81,6 +84,8 @@ aq_monthly_avg <- aggregate(
 
 aq_monthly_avg <- do.call(data.frame, aq_monthly_avg)
 ```
+
+</details>
 
 ## Simple defaults
 

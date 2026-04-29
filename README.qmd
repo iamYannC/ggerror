@@ -42,6 +42,8 @@ pak::pak("iamyannc/ggerror") # 1.0.0
 The examples below use `airquality`, the same dataset used throughout the package vignettes. For convenience I defined a theme, and did minimal data processing on the original dataset.
 
 ```{r defaults}
+#| code-fold: true
+#| code-summary: "defaults and data prep"
 library(ggplot2)
 library(ggerror)
 
