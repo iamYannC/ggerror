@@ -16,6 +16,7 @@ This dataset has 153 rows and 6 columns: four continuous measurements,
 plus Month and Day.
 
 ``` r
+
 data("airquality"); airq <- airquality
 
 # It wouldn't be an R workflow without minimal data cleaning...
@@ -46,6 +47,7 @@ the data (here: numeric x axis, discrete y axis) and picks
 
 ``` r
 
+
 p + 
   geom_error(aes(error = sd_temp_monthly),
              width = 0.4) +
@@ -61,6 +63,7 @@ Same data, pinned
 wrapper:
 
 ``` r
+
 p +
   geom_error_pointrange(aes(error = sd_temp_monthly),
                         size = 0.8,
@@ -73,6 +76,7 @@ p +
 Same data, swapped via the `error_geom` argument:
 
 ``` r
+
 p +
   geom_error(aes(error = sd_temp_monthly),
              error_geom = "linerange") +
@@ -85,6 +89,7 @@ p +
 over it functionally:
 
 ``` r
+
 purrr::map(c("errorbar", "linerange", "crossbar", "pointrange"),
            ~ p + geom_error(aes(error = sd_temp_monthly), error_geom = .x))
 ```
@@ -96,6 +101,7 @@ orientation. They’re useful when the dispersion measure on each side
 carries different meaning.
 
 ``` r
+
 may_week <- subset(airq[1:7,], Month == 'May')
 
 may_summary <- data.frame(
@@ -110,6 +116,7 @@ may_summary <- data.frame(
 :::
 
 ``` r
+
 
 ggplot(may_summary, aes(x = Temp, y = Day)) +
   geom_error(aes(error_neg =  dist2min,
@@ -132,6 +139,7 @@ Per-side styling extends to `color`, `fill`, `linewidth`, `linetype`,
 `width_pos`) or the shared form (`color`, `width`).
 
 ``` r
+
 ggplot(may_summary, aes(Temp, Day)) +
   geom_error(aes(error_neg = dist2min,
                  error_pos = dist2max),
@@ -151,6 +159,7 @@ a threshold. Set the unused side to `NA` and `ggerror` suppresses the
 cap and stem on that side automatically.
 
 ``` r
+
 ggplot(may_summary, aes(Temp, Day)) +
   geom_error(aes(error_neg = dist2min, error_pos = NA),
              color = "steelblue",

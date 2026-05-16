@@ -26,11 +26,9 @@ and draws signed quantities such as residuals with `sign_aware`.
 ## Installation
 
 ``` r
-# Install the stable release from CRAN:
-install.packages("ggerror") # 0.3.0
 
-# Or install the development version from GitHub:
-pak::pak("iamyannc/ggerror") # 1.0.0
+# Install the stable release from CRAN:
+install.packages("ggerror")
 ```
 
 ## Setup
@@ -42,6 +40,7 @@ minimal data processing on the original dataset.
 defaults and data prep
 
 ``` r
+
 library(ggplot2)
 library(ggerror)
 
@@ -90,6 +89,7 @@ The usual case is a symmetric error around some central value.
 
 ``` r
 
+
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   geom_error(aes(error = Temp.sd), width = 0.4) +
   labs(x=NULL, y=NULL,
@@ -105,6 +105,7 @@ below](#supported-geoms)), either pick it with `error_geom = ...` or use
 the pinned wrappers.
 
 ``` r
+
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   geom_error_pointrange(aes(error = Temp.sd), size = 0.7) +
   labs(title = "geom_error_pointrange(aes(error = Temp.sd))")
@@ -119,6 +120,7 @@ easy to show genuinely different quantities on each side, or to suppress
 one side entirely with `NA`.
 
 ``` r
+
 ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
   geom_error(
     aes(error_neg = Temp.se, error_pos = Temp.sd),
@@ -134,6 +136,7 @@ ggplot(aq_monthly_avg, aes(Temp.mean, Month)) +
 ![](reference/figures/README-assym-plot-1.png)
 
 ``` r
+
 
 # Grabbing only the first week in the data and computing for each Temp, its distance from the minimum Temp and maximum Temp.
 week_may <- subset(aq, Month == "May")[1:7, ]
@@ -159,6 +162,7 @@ When you do not want to pre-compute the bounds yourself,
 computes them directly and supports default and custom functions.
 
 ``` r
+
 ggplot(aq, aes(Month, Temp)) +
   stat_error(fun = "mean_ci", error_geom = "pointrange") +
   labs(title = 'stat_error(fun = "mean_ci", error_geom = "pointrange")')
@@ -168,6 +172,7 @@ ggplot(aq, aes(Month, Temp)) +
 
 ``` r
 
+
 # [1] `stat_error()` using fun = "mean_ci" and conf.int = 0.95.
 ```
 
@@ -175,6 +180,7 @@ Custom summary functions work too, as long as they return data frames of
 one row with `y`, `ymin`, and `ymax` columns:
 
 ``` r
+
 mae_summary <- function(x, scale_by = 1) {
   md <- median(x)
   mae <- mean(abs(x - md)) * scale_by
@@ -194,6 +200,7 @@ For residual plots and other signed magnitudes, `sign_aware = TRUE`
 assigns positive and negative values automatically:
 
 ``` r
+
 
 # Residual plot made easy
 
@@ -224,12 +231,12 @@ ggplot(aq_fit, aes(Wind, fitted)) +
 
 ## Supported geoms
 
-| ggplot2 base      | `geom_error(error_geom = ...)` | Pinned wrapper                                                                          |
-|:------------------|:-------------------------------|:----------------------------------------------------------------------------------------|
-| `geom_errorbar`   | `"errorbar"` (default)         | [`geom_error()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)            |
-| `geom_linerange`  | `"linerange"`                  | [`geom_error_linerange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)  |
-| `geom_pointrange` | `"pointrange"`                 | [`geom_error_pointrange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md) |
-| `geom_crossbar`   | `"crossbar"`                   | [`geom_error_crossbar()`](https://iamyannc.github.io/ggerror/reference/geom_error.md)   |
+| ggplot2 base | `geom_error(error_geom = ...)` | Pinned wrapper |
+|:---|:---|:---|
+| `geom_errorbar` | `"errorbar"` (default) | [`geom_error()`](https://iamyannc.github.io/ggerror/reference/geom_error.md) |
+| `geom_linerange` | `"linerange"` | [`geom_error_linerange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md) |
+| `geom_pointrange` | `"pointrange"` | [`geom_error_pointrange()`](https://iamyannc.github.io/ggerror/reference/geom_error.md) |
+| `geom_crossbar` | `"crossbar"` | [`geom_error_crossbar()`](https://iamyannc.github.io/ggerror/reference/geom_error.md) |
 
 ## Learn more
 

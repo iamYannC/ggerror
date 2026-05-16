@@ -13,6 +13,7 @@ This dataset has 153 rows with 6 columns: 4 continuous measurements,
 Month and Day.
 
 ``` r
+
 data("airquality"); airq <- airquality
 
 # It wouldn't be an R workflow without minimal data cleaning...
@@ -44,6 +45,7 @@ negative.
 ### Let’s fit a linear model and see how `Temp` can be explained by `Wind`.
 
 ``` r
+
 model   <- lm(Temp ~ Wind, data = airq)
 airq_fit <- cbind(airquality[,c('Temp','Wind')],
                   predicted = predict(model),
@@ -55,6 +57,7 @@ Let us complement the usual ggplot2 workflow for plotting residuals
 versus true values:
 
 ``` r
+
 ggplot(airq_fit, aes(x = Wind, y = predicted)) +
   geom_line(linewidth = 0.4, colour = "grey40") +
   geom_point(aes(y = Temp), alpha = 0.5) +
@@ -105,6 +108,7 @@ exact column names**.
 The default summary function is `mean_se` (mean ± one standard error):
 
 ``` r
+
 ggplot(airq, aes(Month, Temp)) +
   stat_error(width = 0.2) +
   stat_summary(geom='point') +
@@ -117,6 +121,7 @@ summary functions. You just saw the default, `mean_se`. The second is
 bars.
 
 ``` r
+
 ggplot(airq, aes(Month, Temp)) +
   stat_error(fun = "mean_ci", error_geom = "pointrange") +
   labs(title = 'stat_error(fun = "mean_ci", error_geom = "pointrange")')
@@ -128,6 +133,7 @@ The `conf.int` argument controls the CI width — `0.95` by default, but
 any valid probability in `(0, 1)` works:
 
 ``` r
+
 ggplot(airq, aes(Month, Temp)) +
   stat_error(fun = "mean_ci", conf.int = 0.99,
              error_geom = "linerange") + 
@@ -154,9 +160,12 @@ conflicts).
 **median** as the center, **mean absolute deviation from the median** as
 the spread:
 
-$${mae}(x) = \frac{1}{n}\sum\limits_{i = 1}^{n}\left| x_{i} - {md}(x) \right|$$
+``` math
+\mathrm{mae}(x) = \frac{1}{n}\sum_{i=1}^{n}\left|x_i - \mathrm{md}(x)\right|
+```
 
 ``` r
+
 mae_summary <- function(my_vec, scale_by = 1) {
   md  <- median(my_vec)
   mae <- mean(abs(my_vec - md)) * scale_by
@@ -180,6 +189,7 @@ you’d write `stat_error(fun = mae_summary, scale_by = 2)`.
 Passing `scale_by = 2` to `stat_error`
 
 ``` r
+
 ggplot(airq, aes(Month, Wind)) +
   stat_error(fun = mae_summary, scale_by = 2, error_geom = "crossbar") +
   stat_summary(geom = "point")

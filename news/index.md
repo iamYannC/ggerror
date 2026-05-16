@@ -2,6 +2,8 @@
 
 ## ggerror 1.0.0
 
+CRAN release: 2026-05-12
+
 - New
   [`stat_error()`](https://iamyannc.github.io/ggerror/reference/stat_error.md)
   summarises raw observation-level data into error bounds. Accepts
