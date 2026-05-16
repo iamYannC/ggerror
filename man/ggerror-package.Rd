@@ -8,12 +8,11 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Extends the 'ggplot2' error geoms. geom_error() accepts an 'error' aesthetic with auto-inference of the orientation. It also supports 'error_neg' and 'error_pos' for asymmetric cases, with full control over aesthetics per side, such as color, width etc... The package also includes a vignette covering it's main usecases - symmetric, asymmetric, one-sided, and per-side styling.
+Extends the 'ggplot2' error geoms. geom_error() accepts an error aesthetic with auto-inference of the orientation. It also supports `error_neg` and `error_pos` for asymmetric cases, with full control over aesthetics per side, such as color, width etc...
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/iamYannC/ggerror}
   \item \url{https://iamyannc.github.io/ggerror/}
   \item Report bugs at \url{https://github.com/iamYannC/ggerror/issues}
 }
@@ -21,6 +20,11 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Yann Cohen \email{yannco5@gmail.com} (\href{https://orcid.org/0009-0009-0509-3609}{ORCID})
+
+Authors:
+\itemize{
+  \item Yann Cohen \email{yannco5@gmail.com} (\href{https://orcid.org/0009-0009-0509-3609}{ORCID})
+}
 
 }
 \keyword{internal}

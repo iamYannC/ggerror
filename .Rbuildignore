@@ -2,6 +2,7 @@
 ^dev$
 ^\.agents$
 ^\.claude$
+^.codex$
 ^doc$
 ^Meta$
 ^_pkgdown\.yml$
@@ -13,3 +14,4 @@
 ^\.quarto$
 ^man/figures/README-
 ^codecov\.yml$
+
