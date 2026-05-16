@@ -27,10 +27,7 @@ with `stat_error()`, and draws signed quantities such as residuals with
 
 ``` r
 # Install the stable release from CRAN:
-install.packages("ggerror") # 0.3.0
-
-# Or install the development version from GitHub:
-pak::pak("iamyannc/ggerror") # 1.0.0
+install.packages("ggerror")
 ```
 
 ## Setup
